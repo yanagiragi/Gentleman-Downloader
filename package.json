@@ -1,0 +1,25 @@
+{
+  "name": "e-hentai.Downloader",
+  "version": "1.0.0",
+  "description": "node main.js [urls | urls]",
+  "main": "main.js",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.85.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanagiragi/e-hentai.Downloader.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yanagiragi/e-hentai.Downloader/issues"
+  },
+  "homepage": "https://github.com/yanagiragi/e-hentai.Downloader#readme"
+}
