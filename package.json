@@ -5,7 +5,9 @@
   "main": "main.js",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
-    "request": "^2.85.0"
+    "fs-extra": "^8.1.0",
+    "request": "^2.85.0",
+    "sanitize-filename": "^1.6.2"
   },
   "devDependencies": {},
   "scripts": {
