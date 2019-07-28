@@ -13,6 +13,6 @@
 
 ## Notes:
     
-* argument https://e-hentai.org/g/yyyyyyy/yyyyyyyyyy/?p=4 Starts download from page 1
+* argument https://e-hentai.org/g/yyyyyyy/yyyyyyyyyy/?p=4 Starts download from page 1 to page 4
 
 * Default title is Japanese
