@@ -57,7 +57,6 @@ function ParseNH(index, body) {
 	// use japanese name, else use english
 	const jpTitle = $('#info h2').text()
 	const engTitle = $('#info h1').text()
-	console.log()
 	const title = jpTitle
 	
 	const filepath = path.join(StoragePath, sanitize(title, { replacement: '_' }))
