@@ -50,10 +50,15 @@ function getpic(url, filepath) {
 	})
 }
 
-function ParseNH(index, body) {
+function ParseNH(url, body, index) {
 	const $ = cheerio.load(body)			
 	const pageCount = $('.thumb-container img').length
 	
+	if(pageCount === 0) {
+		console.log(`Error On ${url}, maybe be 503 Service Temporarily Unavailable, will retry later.`)
+		return false
+	}
+
 	// use japanese name, else use english
 	const jpTitle = $('#info h2').text()
 	const engTitle = $('#info h1').text()
@@ -73,7 +78,7 @@ function ParseNH(index, body) {
 	return true
 }
 
-function ParseEH(index, body) {
+function ParseEH(url, body, index) {
 	const $ = cheerio.load(body)			
 	const pageCount = $('.ptt td a')
 		.toArray()
@@ -114,12 +119,13 @@ function main(urlBase, index=0)
 		if(!err){
 			let shallBreak = false
 			if (url.includes('e-hentai')) {
-				shallBreak = ParseEH(index, body)
+				shallBreak = ParseEH(url, body, index)
 			}
 			else if (url.includes('nhentai')) {
-				shallBreak = ParseNH(index, body)
+				shallBreak = ParseNH(url, body, index)
 			}
 			if (!shallBreak) {
+				console.log(`Looping ${urlBase}, index = ${index}`)
 				main(urlBase, index + 1)
 			}
 		}
