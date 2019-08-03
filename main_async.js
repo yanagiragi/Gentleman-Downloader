@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const path = require('path');
 const fs = require('fs-extra');
 const sanitize = require('sanitize-filename')
+const pMap = require('p-map')
 
 const StoragePath = './Storage/'
 
@@ -17,9 +18,11 @@ if(require.main === module)
 			console.log("Example: node main.js $url [$url...]")
 		}
 
-		for (const url of urls) {
-			let res = await main(url.replace(/\?p=[0-9]*/, ''))
-		}
+		const mapper = async url => {
+			return await main(url.replace(/\?p=[0-9]*/, ''))
+		};
+
+		const result = await pMap(urls, mapper, {concurrency: 5});
 	})()
 }
 
