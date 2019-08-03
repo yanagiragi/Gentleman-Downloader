@@ -21,7 +21,7 @@ if(require.main === module)
 function getpic(url, filepath) {
 	const EHoptions = url
 	const NHOptions = { uri : url, encoding : 'binary' }
-	const options = url.includes('t.nhentai.net') ? NHOptions : EHoptions
+	const options = url.includes('nhentai.net') ? NHOptions : EHoptions
 	request(options, (err, res, body) => {
 		if(!err){
 			const $ = cheerio.load(body)
@@ -72,7 +72,9 @@ function ParseNH(url, body, index) {
 
 	for(let i = 0; i < pics.length; ++i){
 		let e = $('img', pics[i])
-		getpic(e.attr('data-src'), filepath)
+		let src = new URL(e.attr('data-src'))
+		src = `${src.origin.replace('t.', 'i.')}${src.pathname.replace('t.', '.')}`
+		getpic(src, filepath)
 	}
 
 	return true
