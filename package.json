@@ -1,8 +1,12 @@
 {
-  "name": "e-hentai.Downloader",
-  "version": "1.0.0",
-  "description": "node main.js [urls | urls]",
+  "name": "gentleman-downloader",
+  "version": "2.0.0",
+  "description": "Automatic tool to download gentleman contents",
   "main": "index.js",
+  "bin": {
+    "yrGentleCli": "bin/cli.js",
+    "yrGentleSearch": "bin/search.js"
+  },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "fs-extra": "^8.1.0",
@@ -18,13 +22,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yanagiragi/e-hentai.Downloader.git"
+    "url": "git+https://github.com/yanagiragi/Gentleman-Downloader.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/yanagiragi/e-hentai.Downloader/issues"
+    "url": "https://github.com/yanagiragi/Gentleman-Downloader/issues"
   },
-  "homepage": "https://github.com/yanagiragi/e-hentai.Downloader#readme"
+  "homepage": "https://github.com/yanagiragi/Gentleman-Downloader#readme"
 }
