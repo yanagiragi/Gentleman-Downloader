@@ -57,6 +57,31 @@ class Ahri
         const title = $('.page-title a[href^="post"]').text().trim()
 	    this.title = title
     }
+
+    // only fetch one page, returns top 5 results
+    static async Search(keywords, returnResults=5) {
+        const url = `http://ahri-hentai.com/dnew.php?search=${encodeURI(keywords)}`
+        const result = await RequestAsync(url)        
+        const $ = ParseDOM(result)
+        const blocks = $('.image')
+        
+        let candidates = []
+        for(let i = 0; i < blocks.length; ++i) {
+
+            if($('.ribbon-wrap', blocks[i]).length > 0 || $('.ribbon-wrap-left', blocks[i]).length > 0) {
+                // animation or adult videos
+                continue
+            }
+            const name = $('.title a', blocks[i]).text().trim()
+            const href = 'http://ahri-hentai.com/' + $('.title a', blocks[i]).attr('href')
+            const thumb = $('img', blocks[i]).attr('src')
+            candidates.push({title: name, href: href, thumb: thumb})
+        }
+
+        candidates = candidates.sort((a, b) => { return (CheckMetaContainsChinese(a.title) && !CheckMetaContainsChinese(b.title)) ? -1 : 0 } ).splice(0, returnResults)
+
+        return candidates
+    }
 }
 
 module.exports.Ahri = Ahri

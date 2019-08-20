@@ -78,6 +78,32 @@ class EH
         
         this.title = this.useJpTitle ? this.jpTitle : this.engTitle
     }
+
+    // only fetch one page, returns top 5 results
+    static async Search(keywords, returnResults=5) {
+        const url = `https://e-hentai.org/?f_search=${encodeURI(keywords)}`
+        const result = await RequestAsync(url)
+        const $ = ParseDOM(result)
+        const blocks = $('.gltc tr')
+
+        let candidates = []
+
+        for(let i = 0; i < blocks.length; ++i) {
+            const name = $('.glink', blocks[i]).text()
+            const href = $('.glname a', blocks[i]).attr('href')
+            const dataSrc = $('.glthumb img', blocks[i]).attr('data-src')
+            const src = $('.glthumb img', blocks[i]).attr('src')
+
+            // for first result, thumbnails stores in src, else stores in data-src
+            const thumb = (dataSrc != null && !dataSrc.includes('data:image/gif')) ? dataSrc : src
+
+            candidates.push({title: name, href: href, thumb: thumb})
+        }
+
+        candidates = candidates.sort((a, b) => { return (CheckMetaContainsChinese(a.title) && !CheckMetaContainsChinese(b.title)) ? -1 : 0 } ).splice(0, returnResults)
+
+        return candidates
+    }
 }
 
 module.exports.EH = EH

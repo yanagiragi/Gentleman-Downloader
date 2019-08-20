@@ -56,6 +56,27 @@ class NH
         this.engTitle = engTitle
         this.title = this.useJpTitle ? this.jpTitle : this.engTitle
     }
+
+    // only fetch one page, returns top 5 results
+    static async Search(keywords, returnResults=5) {
+        const url = `https://nhentai.net/search/?q=${encodeURI(keywords)}`
+        const result = await RequestAsync(url)
+        const $ = ParseDOM(result)
+        const blocks = $('.gallery')
+        
+        let candidates = []
+        
+        for(let i = 0; i < blocks.length; ++i) {
+            const name = $('.caption', blocks[i]).text()
+            const href = 'https://nhentai.net/' + $('a', blocks[i]).attr('href')
+            const thumb = $('.lazyload', blocks[i]).attr('data-src')
+            candidates.push({title: name, href: href, thumb: thumb})
+        }
+        
+        candidates = candidates.sort((a, b) => { return (CheckMetaContainsChinese(a.title) && !CheckMetaContainsChinese(b.title)) ? -1 : 0 } ).splice(0, returnResults)
+        
+        return candidates
+    }
 }
 
 module.exports.NH = NH

@@ -38,6 +38,27 @@ class Wnacg
         const title = $('#bodywrap h2').text()		
         this.title = title
     }
+
+     // only fetch one page, returns top 5 results
+     static async Search(keywords, returnResults=5) {
+        const url = `https://www.wnacg.org/albums-index-page-1-sname-${encodeURI(keywords)}.html`
+        const result = await RequestAsync(url)        
+        const $ = ParseDOM(result)
+        const blocks = $('.gallary_item')        
+        let candidates = []
+
+        for(let i = 0; i < blocks.length; ++i) {
+            const name = $('.title a', blocks[i]).text()
+            const href = 'https://www.wnacg.org/' + $('.title a', blocks[i]).attr('href')
+            const thumb = 'https:' + $('img', blocks[i]).attr('src')
+
+            candidates.push({title: name, href: href, thumb: thumb})
+        }
+
+        candidates = candidates.sort((a, b) => { return (CheckMetaContainsChinese(a.title) && !CheckMetaContainsChinese(b.title)) ? -1 : 0 } ).splice(0, returnResults)
+
+        return candidates
+    }
 }
 
 module.exports.Wnacg = Wnacg
