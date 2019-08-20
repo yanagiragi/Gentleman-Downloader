@@ -1,18 +1,31 @@
-# E-Hentai Downloader
+# Gentleman-Downloader
 
-## How to Use:
+![](https://i.imgur.com/cLk0Xwz.png)
 
-    node main.js [urls | urls]
+## Current Supports
 
-    Examples:
-        node main.js "https://e-hentai.org/g/xxxxxxx/xxxxxxxxxx/" "https://e-hentai.org/g/yyyyyyy/yyyyyyyyyy/?p=1"
+* e-hentai / exhentai (Fallbacks to e-hentai)
 
-## Stored Path:
+* Ahri8
 
-    ./Storage/${YOUR_URL_TITLE}/*.jpg
+* Wnacg
 
-## Notes:
+## Commands
+
+* Download: 
     
-* argument https://e-hentai.org/g/yyyyyyy/yyyyyyyyyy/?p=4 Starts download from page 1 to page 4
+    ```node bin/cli.js $url [$url]```
 
-* Default title is Japanese
+* Search: 
+
+    ```node bin/search.js $keyword  [$keywords]```
+
+## Disclaimer
+
+* All contents in this project is for academic purpose only, I do not own any contents downloaded from the code.
+
+## License
+
+MIT License
+
+Copyright (c) 2019 yanagiragi
