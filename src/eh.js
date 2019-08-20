@@ -94,6 +94,10 @@ class EH
             const dataSrc = $('.glthumb img', blocks[i]).attr('data-src')
             const src = $('.glthumb img', blocks[i]).attr('src')
 
+            if(name.length == 0) {
+                continue
+            }
+
             // for first result, thumbnails stores in src, else stores in data-src
             const thumb = (dataSrc != null && !dataSrc.includes('data:image/gif')) ? dataSrc : src
 
