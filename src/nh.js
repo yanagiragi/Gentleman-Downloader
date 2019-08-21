@@ -59,7 +59,7 @@ class NH
 
     // only fetch one page, returns top 5 results
     static async Search(keywords, returnResults=5) {
-        const url = `https://nhentai.net/search/?q=${encodeURI(keywords)}`
+        const url = `https://nhentai.net/search/?q=${encodeURIComponent(keywords)}`
         const result = await RequestAsync(url)
         const $ = ParseDOM(result)
         const blocks = $('.gallery')

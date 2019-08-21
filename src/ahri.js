@@ -60,7 +60,7 @@ class Ahri
 
     // only fetch one page, returns top 5 results
     static async Search(keywords, returnResults=5) {
-        const url = `http://ahri-hentai.com/dnew.php?search=${encodeURI(keywords)}`
+        const url = `http://ahri-hentai.com/dnew.php?search=${encodeURIComponent(keywords)}`
         const result = await RequestAsync(url)        
         const $ = ParseDOM(result)
         const blocks = $('.image')

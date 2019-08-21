@@ -81,7 +81,7 @@ class EH
 
     // only fetch one page, returns top 5 results
     static async Search(keywords, returnResults=5) {
-        const url = `https://e-hentai.org/?f_search=${encodeURI(keywords)}`
+        const url = `https://e-hentai.org/?f_search=${encodeURIComponent(keywords)}`
         const result = await RequestAsync(url)
         const $ = ParseDOM(result)
         const blocks = $('.gltc tr')

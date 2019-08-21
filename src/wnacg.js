@@ -41,7 +41,7 @@ class Wnacg
 
      // only fetch one page, returns top 5 results
      static async Search(keywords, returnResults=5) {
-        const url = `https://www.wnacg.org/albums-index-page-1-sname-${encodeURI(keywords)}.html`
+        const url = `https://www.wnacg.org/albums-index-page-1-sname-${encodeURIComponent(keywords)}.html`
         const result = await RequestAsync(url)        
         const $ = ParseDOM(result)
         const blocks = $('.gallary_item')        
