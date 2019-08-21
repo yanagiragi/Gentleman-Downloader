@@ -64,10 +64,11 @@ app.post('/login', (req, res) => {
 
 app.get('/search', async (req, res) => {
     const keyword = req.query.param
-    const slice = 6
+    const slice = 20
     const EHResults = await EH.Search(keyword, slice)
     const NHResults = await NH.Search(keyword, slice)
-    const WnacgResults = await Wnacg.Search(keyword, slice)
+    // const WnacgResults = await Wnacg.Search(keyword, slice)
+    const WnacgResults = []
     const AhriResults = await Ahri.Search(keyword, slice)
     const results = {EH: EHResults, NH: NHResults, Wnacg: WnacgResults, Ahri: AhriResults }
 

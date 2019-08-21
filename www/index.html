@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="referrer" content="no-referrer" />
     <title>Gentleman</title>
     
     <!-- Compiled and minified CSS --> 
@@ -132,43 +133,50 @@
               
               <h6 style="padding: 10px;">{{ types[typeIdx] }} Results: </h6>              
                     
-              <!--<ul class="pagination" v-if="collections.length !== 0" style="text-align: center;">
-                <li class="waves-effect" v-on:click="passIndex(currentIndex - 1)"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
-                <li v-if="leastIndex != 0">...</li>
-                
-                <li v-for="(n, index) in (mostIndex - leastIndex)" class="waves-effect" v-bind:class="{ active: (index + leastIndex) === currentIndex }" v-on:click="passIndex(index + leastIndex)">
-                  <a href="#!" style="font-size: 14px;"> {{ leastIndex + index + 1 }} </a>
-                </li>
-                
-                <li  v-if="mostIndex != parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage)">...</li>
-                <li class="waves-effect" v-on:click="passIndex(currentIndex + 1)"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
-              </ul>      -->
-  
+              <ul class="pagination" style="text-align: center;">                
+                <ul class="pagination" style="text-align: center;">
+                  <li class="waves-effect" v-on:click="passIndex(typeIdx, currentIndex[typeIdx] - 1)"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+                  <li v-if="leastIndex[typeIdx] != 0">...</li>
+                  
+                  <li v-for="(n, index) in (mostIndex[typeIdx] - leastIndex[typeIdx])" 
+                      class="waves-effect" 
+                      v-bind:class="{ active: (index + leastIndex[typeIdx]) === currentIndex[typeIdx] }" 
+                      v-on:click="passIndex(typeIdx, index + leastIndex[typeIdx])">
+                      <a href="#!" style="font-size: 14px;"> {{ leastIndex[typeIdx] + index + 1 }} </a>
+                  </li>
+                  
+                  <li v-if="mostIndex[typeIdx] != parseInt((collection.length + indexPerPage - 1)/ indexPerPage)">...</li>
+                  <li class="waves-effect" v-on:click="passIndex(typeIdx, currentIndex[typeIdx] + 1)"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+                </ul>                
+              </ul>
 
               <div v-if="collection.length !== 0" v-for="(n, index) in indexPerPage" class="col s12 m2">
-                <div class="card" v-if="(indexPerPage * currentIndex + index) < collection.length" :key="indexPerPage * currentIndex + index">
+                <div class="card" v-if="(indexPerPage * currentIndex[typeIdx] + index) < collections[typeIdx].length" :key="indexPerPage * currentIndex[typeIdx] + index">
                   <div class="card-image waves-effect waves-block waves-light">
-                    <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex + index)].thumb" v-bind:height="screen.height / 3.6">
+                    <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" v-bind:height="screen.height / 3.6">
                   </div>
                   <div class="card-content">
-                    <div class="card-title activator grey-text text-darken-4" style="font-size: 20px; text-overflow: ellipsis; height: 60px; text-align: center; overflow: hidden;" v-bind:style="getFontSize(collection[(indexPerPage * currentIndex + index)].title)">
-                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex + index)].href" rel="noopener">
-                          {{ collection[(indexPerPage * currentIndex + index)].title }}
+                    <div 
+                        class="card-title activator grey-text text-darken-4" 
+                        style="font-size: 20px; text-overflow: ellipsis; height: 60px; text-align: center; overflow: hidden;" 
+                        v-bind:style="getFontSize(collection[(indexPerPage * currentIndex[typeIdx] + index)].title)">
+                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex[typeIdx] + index)].href" rel="noopener">
+                          {{ collection[(indexPerPage * currentIndex[typeIdx] + index)].title }}
                         </a>
                     </div>					  
                   </div>
                   <div class="card-reveal">
                     <div class="card-title grey-text text-darken-4" style="font-size: 16px; font-weight: bold; text-overflow: ellipsis; overflow: hidden;">
-                      {{ collection[(indexPerPage * currentIndex + index)].title }}
+                      {{ collection[(indexPerPage * currentIndex[typeIdx] + index)].title }}
                     </div>
                     <div style="width: 80%; word-wrap: break-word;">
                         <br>
-                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex + index)].href" rel="noopener">
-                          {{ collection[(indexPerPage * currentIndex + index) ].href }}
+                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex[typeIdx] + index)].href" rel="noopener">
+                          {{ collection[(indexPerPage * currentIndex[typeIdx] + index) ].href }}
                         </a>
                         <br><br>
-                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex + index)].thumb" rel="noopener">
-                        {{ collection[(indexPerPage * currentIndex + index) ].thumb }}
+                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" rel="noopener">
+                        {{ collection[(indexPerPage * currentIndex[typeIdx] + index) ].thumb }}
                         </a>
                     </div>
                   </div>      
@@ -206,7 +214,13 @@
             $.ajax('/search?param=' + param).done(data => {
               collectionVue.types = Object.keys(data)
               collectionVue.collections = Object.values(data)
-              console.log(Object.entries(data))
+              collectionVue.currentIndex = new Array(collectionVue.collections.length).fill(0)
+              collectionVue.leastIndex = new Array(collectionVue.collections.length).fill(0)
+              collectionVue.mostIndex = new Array(collectionVue.collections.length)
+              for (let i = 0; i < collectionVue.mostIndex.length; ++i) {
+                collectionVue.mostIndex[i] = collectionVue.collections[i].length
+              }
+              collectionVue.$forceUpdate()
               M.toast({html: 'Done!'})
             })
         })
@@ -226,9 +240,9 @@
             status: 'null',
             types : [],
             collections : [],
-            currentIndex: 0,
-            leastIndex: 0,
-            mostIndex: 0,
+            currentIndex: [],
+            leastIndex: [],
+            mostIndex: [],
             indexPerPage: 6,
             paginationPerPage: 15,
             paginationStride: 5
@@ -240,44 +254,54 @@
             size = size < 16 ? 16 : size
 					  return `font-size: ${size}px;`
           },
-          passIndex : function(idx){
-            let limit = parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage);
-            this.currentIndex =  idx < 0 ? 0 : idx < limit ? idx : limit - 1 ;
+          passIndex : function(typeIdx, idx){
+            console.log(typeIdx, this.currentIndex[typeIdx], idx)
+            let limit = parseInt((this.collections[typeIdx].length + this.indexPerPage - 1)/ this.indexPerPage);
+            this.currentIndex[typeIdx] = idx < 0 ? 0 : idx < limit ? idx : limit - 1 ;
+            this.$forceUpdate()
           },
-          updatePaginationIndexes : function()
+          updatePaginationIndexes : function(idx)
           {
-            let limit = parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage);
-            this.leastIndex = (this.currentIndex - this.paginationStride) > 0 ? (this.currentIndex - this.paginationStride) : 0;
-            this.mostIndex = (this.leastIndex + this.paginationPerPage) > limit ? limit : (this.leastIndex + this.paginationPerPage);
+            let limit = parseInt((this.collections[idx].length + this.indexPerPage - 1)/ this.indexPerPage);
+            this.leastIndex[idx] = (this.currentIndex[idx] - this.paginationStride) > 0 ? (this.currentIndex[idx] - this.paginationStride) : 0;
+            this.mostIndex[idx] = (this.leastIndex[idx] + this.paginationPerPage) > limit ? limit : (this.leastIndex[idx] + this.paginationPerPage);
             // Re-clamp leastIndex
             // Consider when you reach the end of the paginations
             // Without this clamp, the leastIndex will continues to minus with currentIndex increases
             // results in displayed pagination amount != (2 * paginationStride + 1)
-            this.leastIndex = (this.mostIndex  - this.paginationPerPage) > 0 ? (this.mostIndex  - this.paginationPerPage) : 0;
+            this.leastIndex[idx] = (this.mostIndex[idx]  - this.paginationPerPage) > 0 ? (this.mostIndex[idx]  - this.paginationPerPage) : 0;
           }
         },
         watch: {
           indexPerPage: function(val){
-            this.updatePaginationIndexes()
-          },
-          currentIndex: function (val) {            
-            // clamp the range
-            let limit = parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage);
-            val = val < 0 ? 0 : val >= limit ? limit - 1: val;
-            
-            // update once since updatePaginationIndexes need it
-            this.currentIndex = val;
-            this.updatePaginationIndexes();
-            
-            // Disable opened cards
-            [...$('.card-reveal')].filter(x => $(x).css('display') === 'block').map(x => $(x).css('display', '').css('transform',''))
-            
-            // actual update to this.currentIndex
-            return val
+            for(let i = 0; i < this.types.length; ++i){
+              this.updatePaginationIndexes(i)
+            }            
           },
           paginationPerPage: function (val) {
             this.paginationStride = parseInt((this.paginationPerPage - 1) / 2)
-          }
+          },
+          currentIndex: function (newVal) {
+            console.log(newVal)
+
+            for(let idx = 0; idx < this.types.length; ++idx){              
+              let val = newVal[idx]
+
+              // clamp the range
+              let limit = parseInt((this.collections[idx].length + this.indexPerPage[idx] - 1)/ this.indexPerPage[idx]);
+              val = val < 0 ? 0 : val >= limit ? limit - 1: val;
+              
+              
+              // update once since updatePaginationIndexes need it
+              this.currentIndex[idx] = val;
+              this.updatePaginationIndexes(idx);
+              
+              // Disable opened cards
+              [...$('.card-reveal')].filter(x => $(x).css('display') === 'block').map(x => $(x).css('display', '').css('transform',''))
+            }
+
+            return this.currentIndex
+          },
         }
       })
 
