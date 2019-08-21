@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>G-D</title>
+    
+    <!-- Compiled and minified CSS --> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        
+    <style>    
+      /* fallback */
+      @font-face {
+        font-family: 'Material Icons';
+        font-style: normal;
+        font-weight: 400;
+        src: url(font/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+      }
+
+      .material-icons {
+        font-family: 'Material Icons';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -moz-font-feature-settings: 'liga';
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .customPadding{
+        padding-left: 10%; 
+        padding-right: 10%;
+        padding-top: 10px;
+        margin-bottom: 0px;
+      }
+
+      .customPadding2 {
+        padding-left: 10%; 
+        padding-right: 10%;
+      }
+
+      body {
+        /*background: url('img/bg2.jpg');*/
+        background: url('img/bg1.jpg');
+        background-repeat: repeat;
+        background-size : 100%;
+        color:  grey;
+        overflow: auto;
+        font-family: 微軟正黑體;
+      }
+
+      .tabs-content.carousel.carousel-slider .carousel-item.active{
+          position: relative;
+      }
+
+      .inputHidden{
+        width: -webkit-fill-available;
+        height: -webkit-fill-available;
+        position: absolute;
+        z-index: 999;
+        top: 50px;
+        opacity: 1;
+      }
+
+      .opacTransiion {
+        transition-property: opacity 0.5s ease-in-out;
+        opacity: 1;
+      }
+
+      .opacTransiion.opacTransitionToggle {
+        opacity: 0;
+        transition-property: opacity 0.5s ease-in-out;
+      }
+
+      .file-upload > input {
+        display: none;
+      }
+
+      .uploadBtn {
+        opacity: .25;
+        background: inherit;
+      }
+
+      .uploadBtn:hover {
+        opacity: 1;
+        transition: 0.5s ease-in-out;
+        background: inherit;
+      }
+
+    </style>
+
+  </head>
+  <!--<body style="height: -webkit-fill-available; overflow: hidden;">-->
+  <body style="height: -webkit-fill-available; "></body>
+      <div id="test-swipe-2">
+          <div class="customPadding row opacTransiion" id="collectionInput">
+              <h6 style="padding: 10px; padding-bottom: 5px;">Inputs</h6>
+              <form class="col s12">
+                <div class="row">
+                  <div class="input-field col s11">
+                    <input id="collectionPath" placeholder="どこ━━━━(゜∀゜三゜∀゜)━━━━!!??" type="text" class="validate">
+                    <label for="collectionPath">Enter Keyword</label>
+                  </div>
+  
+                  <!--<div class="input-field col uploadBtn" style="margin-left: -50px; margin-top: 25px; z-index: 998; width: 38px;">
+                    <div class="file-upload">
+                      <label for="collectionFileInput">
+                        <i class="material-icons">cloud_upload</i>
+                      </label>
+                      <input id="collectionFileInput" type="file" webkitdirectory directory/>
+                    </div>
+                  </div>-->
+                  
+                  <a class="btn-floating btn-small waves-effect waves-light" style="margin-top: 20px; margin-left: 5px;" id="submitCollection">
+                    <i class="material-icons">send</i>
+                  </a>
+                </div>
+              </form>
+          </div>
+          <div class="customPadding row inputHidden" id="collectionInputHidden">
+              <div class="progress">
+                  <div class="indeterminate"></div>
+              </div>
+          </div>
+          <div class="customPadding2 opacTransiion" id="collectionResult">
+            <h6 style="padding: 10px;">Results: {{ status }} </h6>
+            
+            <ul class="pagination" v-if="collections.length !== 0" style="text-align: center;">
+              <li class="waves-effect" v-on:click="passIndex(currentIndex - 1)"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+              <li v-if="leastIndex != 0">...</li>
+              
+              <li v-for="(n, index) in (mostIndex - leastIndex)" class="waves-effect" v-bind:class="{ active: (index + leastIndex) === currentIndex }" v-on:click="passIndex(index + leastIndex)">
+                <a href="#!" style="font-size: 14px;"> {{ leastIndex + index + 1 }} </a>
+              </li>
+              
+              <li  v-if="mostIndex != parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage)">...</li>
+              <li class="waves-effect" v-on:click="passIndex(currentIndex + 1)"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+            </ul>
+            
+            <div class="row">
+              <div v-if="collections.length !== 0" v-for="(n, index) in indexPerPage" class="col s12 m4">
+                <div class="card" v-if="(indexPerPage * currentIndex + index) < collections.length" :key="indexPerPage * currentIndex + index">
+                  <div class="card-image waves-effect waves-block waves-light">
+                    <img class="activator" v-bind:src="collections[(indexPerPage * currentIndex + index)].preview">
+                  </div>
+                  <div class="card-content">
+                    <div class="card-title activator grey-text text-darken-4" style="font-size: 20px; height: 32px; text-overflow: ellipsis; overflow: hidden; text-align: center;">
+                      {{ collections[(indexPerPage * currentIndex + index)].name }}
+                    </div>					  
+                  </div>
+                  <div class="card-reveal">
+                    <div class="card-title grey-text text-darken-4" style="font-size: 16px; font-weight: bold; text-overflow: ellipsis; overflow: hidden;">
+                      {{ collections[(indexPerPage * currentIndex + index)].name }}
+                    </div>
+                    <div style="width: 80%; word-wrap: break-word;">
+                        <br>{{ collections[(indexPerPage * currentIndex + index) ].path }}<br><br>{{ collections[(indexPerPage * currentIndex + index)].preview }}
+                    </div>
+                  </div>      
+                </div>	
+              </div>
+              <div v-if="collections.length === 0">
+                <div v-for="d in 3" class="col s12 m4">
+                  <div class="card">
+                    <div class="card-image waves-effect waves-block waves-light">
+                      <img class="activator" v-bind:src="`img/bg.png`">
+                    </div>
+                    <div class="card-content">
+                      <div class="card-title activator grey-text text-darken-4" style="height: 32px; text-overflow: ellipsis; overflow: hidden; text-align: center;">
+                        {{ ['This', 'Is', 'Placeholder'][d - 1] }}
+                      </div>					  
+                    </div>
+                    <div class="card-reveal">
+                      <div class="card-title grey-text text-darken-4"  style="font-size: 16px; font-weight: bold; text-overflow: ellipsis; overflow: hidden;">
+                          {{ ['This', 'This', 'This'][d - 1] }}
+                      </div>
+                      <div style="width: 80%; word-wrap: break-word;">
+                          <br> {{ ['Is', 'Is', 'Is'][d - 1] }}<br><br> {{ ['Placeholder', 'Placeholder', 'Placeholder'][d - 1] }}
+                      </div>
+                    </div>      
+                  </div>	
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+
+    </div> <!-- end of  <div style="height: -webkit-fill-available;">-->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+    <script type="text/javascript">
+
+      $(document).ready(function(){        
+        $('#DelayHolder').css('display', '')
+        
+        $('.tabs').tabs( {
+          duration : 500,
+          swipeable: false
+        });
+
+        // Disable Hiddle Blocks
+        $('#generateInputHidden').css('display', 'none');
+        $('#collectionInputHidden').css('display', 'none');
+      });
+
+      var collectionVue = new Vue({
+        el: '#collectionResult',
+        data: {
+            status: 'null',
+            collections : [],
+            currentIndex: -1,
+            leastIndex: 0,
+            mostIndex: 0,
+            indexPerPage: 6,
+            paginationPerPage: 15,
+            paginationStride: 5
+        },
+        methods:
+        {
+          getFontSize : function(str){
+					  var size = 16 - ((str.length - 10) / 4)
+					  return `font-size: ${size}px;`
+          },
+          passIndex : function(idx){
+            let limit = parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage);
+            this.currentIndex =  idx < 0 ? 0 : idx < limit ? idx : limit - 1 ;
+          },
+          updatePaginationIndexes : function()
+          {
+            let limit = parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage);
+            this.leastIndex = (this.currentIndex - this.paginationStride) > 0 ? (this.currentIndex - this.paginationStride) : 0;
+            this.mostIndex = (this.leastIndex + this.paginationPerPage) > limit ? limit : (this.leastIndex + this.paginationPerPage);
+            // Re-clamp leastIndex
+            // Consider when you reach the end of the paginations
+            // Without this clamp, the leastIndex will continues to minus with currentIndex increases
+            // results in displayed pagination amount != (2 * paginationStride + 1)
+            this.leastIndex = (this.mostIndex  - this.paginationPerPage) > 0 ? (this.mostIndex  - this.paginationPerPage) : 0;
+          }
+        },
+        watch: {
+          indexPerPage: function(val){
+            this.updatePaginationIndexes()
+          },
+          currentIndex: function (val) {            
+            // clamp the range
+            let limit = parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage);
+            val = val < 0 ? 0 : val >= limit ? limit - 1: val;
+            
+            // update once since updatePaginationIndexes need it
+            this.currentIndex = val;
+            this.updatePaginationIndexes();
+            
+            // Disable opened cards
+            [...$('.card-reveal')].filter(x => $(x).css('display') === 'block').map(x => $(x).css('display', '').css('transform',''))
+            
+            // actual update to this.currentIndex
+            return val
+          },
+          paginationPerPage: function (val) {
+            this.paginationStride = parseInt((this.paginationPerPage - 1) / 2)
+          }
+        }
+      })
+
+    </script>
+  </body>
+</html>
