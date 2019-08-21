@@ -67,8 +67,7 @@ app.get('/search', async (req, res) => {
     const slice = 20
     const EHResults = await EH.Search(keyword, slice)
     const NHResults = await NH.Search(keyword, slice)
-    // const WnacgResults = await Wnacg.Search(keyword, slice)
-    const WnacgResults = []
+    const WnacgResults = await Wnacg.Search(keyword, slice)
     const AhriResults = await Ahri.Search(keyword, slice)
     const results = {EH: EHResults, NH: NHResults, Wnacg: WnacgResults, Ahri: AhriResults }
 

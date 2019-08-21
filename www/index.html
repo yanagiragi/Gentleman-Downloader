@@ -92,6 +92,10 @@
         background: inherit;
       }
 
+      .Downloaded {
+        color: red;
+      }
+
     </style>
 
   </head>
@@ -100,6 +104,7 @@
 
     <div id="collectionMainPage">
 
+      <!-- MemoList -->
       <ul id="sidenav-1" class="sidenav">
         <li><div class="user-view">
           <div class="background">
@@ -109,10 +114,11 @@
         </div></li>
 
         <li>
-            <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="clearCopyList">
-              <i class="material-icons">clear</i>Clear List
-            </a>
-          </li>
+          <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="clearCopyList">
+            <i class="material-icons">clear</i>Clear List
+          </a>
+        </li>
+        
         <li>
           <a href="#!" 
             class="grey lighten-1 btn-small btn waves-effect waves-light copyBtn"
@@ -140,6 +146,7 @@
         </div>        
       </ul>
 
+      <!-- TaskList -->
       <ul id="sidenav-2" class="sidenav">
           <li><div class="user-view">
               <div class="background">
@@ -153,16 +160,31 @@
                 <i class="material-icons">clear</i>Clear List
               </a>
             </li>
+
+            <li>
+                <a href="#!" 
+                  class="grey lighten-1 btn-small btn waves-effect waves-light copyTaskBtn"
+                  v-bind:data-clipboard-text="copyTaskStr"
+                  onclick="M.toast({html: `Copy ${collectionVue.taskList.filter(x => !x.hasDownload).length} Entries`, displayLength: 1000})"
+                  >
+                  <i class="material-icons">content_copy</i>Copy Tasks
+                </a>
+              </li>
+
             <div style="padding-left: 30px; padding-right: 30px;">
               <div v-for="(list, listId) in taskList" style="padding-bottom: 12px;">
                 <div style="background: inherit; position: absolute;margin-left: -10px; margin-top: 3px;">
-                   <div class="uploadBtn" v-on:click="deleteTask(listId)">
+                   <div v-if="list.hasDownload === false" class="uploadBtn" v-on:click="deleteTask(listId)">
                       <i class="material-icons">clear</i>
                     </div>
+                    <div v-if="list.hasDownload === true" class="uploadBtn" v-on:click="resetTask(listId)">
+                      <i class="material-icons" style="font-size: 20px; margin-left: 1px;">do_not_disturb_alt</i>
+                    </div>
+                    
                 </div>
                 <div style="margin-left: 20px;">
-                  <a rel="noopener" target="_blank">
-                      {{ list }}
+                  <a v-on:click="IncrementTaskIndex(listId - taskIndex)" v-bind:class="{ Downloaded: list.hasDownload }">
+                      {{ list.keyword }}
                   </a>
                 </div>
                
@@ -175,8 +197,12 @@
         <a href="#" data-target="sidenav-1" class="sidenav-trigger"><i class="material-icons">menu</i></a>
       </div>
 
+      <div style="padding: 18px; position: absolute; margin-top: 35px; left: 7px;">
+          {{ copyList.length }}
+      </div>
+
       <div style="padding: 18px; position: absolute; right: 7px; margin-top: 35px;">
-          {{ taskIndex }}
+          <a href="#!" v-on:click="collectionVue.IncrementTaskIndex(-collectionVue.taskIndex-1)">{{ taskIndex }}</a>
       </div>
 
       <div style="padding: 18px; position: absolute; right: 0px;">
@@ -250,15 +276,11 @@
 
               <div v-if="collection.length !== 0" v-for="(n, index) in indexPerPage" class="col s12 m2">
                 <div class="card" v-if="(indexPerPage * currentIndex[typeIdx] + index) < collections[typeIdx].length" :key="indexPerPage * currentIndex[typeIdx] + index">
-                  <div class="card-image waves-effect waves-block waves-light">
-                    
+                  <div class="card-image waves-effect waves-block waves-light">                    
                       <a class="deep-orange darken-1 btn-floating btn-small waves-effect waves-light" style=" margin-top: 10px;  margin-right: -26px; position: absolute; right: 40px;" v-on:click="memo(typeIdx, (indexPerPage * currentIndex[typeIdx] + index))">
-                          <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">add_shopping_cart</i>
-                        </a>
-    
-
+                        <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">add_shopping_cart</i>
+                      </a>
                     <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" v-bind:height="screen.height / 3.6">
-                    
                     
                   </div>
                   <div class="card-content">
@@ -308,11 +330,6 @@
 
         $('#sidenav-1').sidenav({edge: 'left'});
         $('#sidenav-2').sidenav({edge: 'right'});
-        
-        $('.tabs').tabs( {
-          duration : 500,
-          swipeable: false
-        });
 
         // Disable Hiddle Blocks
         $('#generateInputHidden').css('display', 'none');
@@ -324,7 +341,7 @@
 
         $('#submitTask').click(event => {
             const splitted = $('#textarea1').val().split('\n').filter(x => x.length > 0).filter(x => !x.includes('http://') && !x.includes('https://'))
-            splitted.map(x => collectionVue.taskList.push(x))
+            splitted.map(x => collectionVue.taskList.push({ keyword: x, hasDownload: false }))
             collectionVue.taskIndex = -1
             $('#textarea1').val('')
             M.textareaAutoResize($('#textarea1'));
@@ -343,6 +360,20 @@
             e.clearSelection();
         });
         clipboard.on('error', function(e) {
+            console.error('Accion:', e.action);
+            console.error('Trigger:', e.trigger);
+        });
+
+        const clipboard2 = new Clipboard('.copyTaskBtn');
+
+        clipboard2.on('success', function(e) {
+            console.info('Accion:', e.action);
+            console.info('Texto:', e.text);
+            console.info('Trigger:', e.trigger);
+
+            e.clearSelection();
+        });
+        clipboard2.on('error', function(e) {
             console.error('Accion:', e.action);
             console.error('Trigger:', e.trigger);
         });
@@ -379,6 +410,14 @@
               str += `${iterator.href} `
             }
             return str
+          },
+          copyTaskStr: function() {
+            let str = ''
+            for (const iterator of this.taskList) {
+              if (iterator.hasDownload) { continue }
+              str += `${iterator.keyword}\n\n`
+            }
+            return str
           }
         },
         methods:
@@ -407,6 +446,9 @@
           memo : function(typeId, collectionId) {
             M.toast({html: 'Add ' + this.collections[typeId][collectionId].title, displayLength: 1000})
             this.copyList.push(this.collections[typeId][collectionId])
+            if (this.taskIndex >= 0 && this.taskIndex < this.taskList.length) {
+              this.taskList[this.taskIndex].hasDownload = true
+            }
           },
           deleteMemo: function(listId) {
             this.copyList.splice(listId, 1)
@@ -425,10 +467,21 @@
           IncrementTaskIndex: function(increment) {
             const val = increment + this.taskIndex
             this.taskIndex = (val >= this.taskList.length ? this.taskList.length - 1 : (val <= -1 ? -1 : val))
-            $('#textarea1').val(this.taskList[this.taskIndex])
+            
+            const instance1 = M.Sidenav.getInstance($('#sidenav-1'));
+            instance1.close()
+
+            const instance2 = M.Sidenav.getInstance($('#sidenav-2'));
+            instance2.close()
+
+            M.toast({html: `Update Query to ${this.taskList[this.taskIndex].keyword}`, duration: 1000})
+
+            $('#textarea1').val(this.taskList[this.taskIndex].keyword)
+            this.RunTask()
           },
           RunTask: function() {
             const param =  $('#textarea1').val()
+            const pendingInstnace = M.toast({html: 'Pending ' + param + ' ... ', displayLength: 30000})
             $.ajax('/search?param=' + param).done(data => {
               collectionVue.types = Object.keys(data)
               collectionVue.collections = Object.values(data)
@@ -440,10 +493,14 @@
               }
               collectionVue.$forceUpdate()
               M.toast({html: 'Done!', displayLength: 1000})
+              pendingInstnace.dismiss()
             })
           },
           deleteTask: function(listId) {
             this.taskList.splice(listId, 1)
+          },
+          resetTask: function(listId) {
+            this.taskList[listId].hasDownload = false
           },
           clearTaskList: function(silent=false) {
             const len = this.taskList.length
