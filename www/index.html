@@ -100,11 +100,12 @@
 
     <div id="collectionMainPage">
 
-      <ul id="slide-out" class="sidenav">
+      <ul id="sidenav-1" class="sidenav">
         <li><div class="user-view">
           <div class="background">
             <img src="img/bg.jpg">
           </div>
+          <div style="text-align: center; vertical-align: middle; padding-bottom: 35px;"><h6 class="white-text">Clipboard</h6></div>
         </div></li>
 
         <li>
@@ -112,9 +113,12 @@
               <i class="material-icons">clear</i>Clear List
             </a>
           </li>
-
         <li>
-          <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="copyClipboard" id="copyClipboardBtn" v-bind:data-clipboard-text="copyListStr">
+          <a href="#!" 
+            class="grey lighten-1 btn-small btn waves-effect waves-light copyBtn"
+            v-bind:data-clipboard-text="copyListStr"
+            onclick="M.toast({html: `Copy ${collectionVue.copyList.length} Entries`, displayLength: 1000})"
+            >
             <i class="material-icons">content_copy</i>Copy List
           </a>
         </li>
@@ -133,12 +137,61 @@
             </div>
            
           </div>
-        </div>
-        
+        </div>        
       </ul>
+
+      <ul id="sidenav-2" class="sidenav">
+          <li><div class="user-view">
+              <div class="background">
+                <img src="img/bg.jpg">
+              </div>
+              <div style="text-align: center; vertical-align: middle; padding-bottom: 35px;"><h6 class="white-text">TaskList</h6></div>
+            </div></li>
+    
+            <li>
+              <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="clearTaskList">
+                <i class="material-icons">clear</i>Clear List
+              </a>
+            </li>
+            <div style="padding-left: 30px; padding-right: 30px;">
+              <div v-for="(list, listId) in taskList" style="padding-bottom: 12px;">
+                <div style="background: inherit; position: absolute;margin-left: -10px; margin-top: 3px;">
+                   <div class="uploadBtn" v-on:click="deleteTask(listId)">
+                      <i class="material-icons">clear</i>
+                    </div>
+                </div>
+                <div style="margin-left: 20px;">
+                  <a rel="noopener" target="_blank">
+                      {{ list }}
+                  </a>
+                </div>
+               
+              </div>
+            </div>        
+      </ul>
+
+
       <div style="padding: 18px; position: absolute;">
-        <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+        <a href="#" data-target="sidenav-1" class="sidenav-trigger"><i class="material-icons">menu</i></a>
       </div>
+
+      <div style="padding: 18px; position: absolute; right: 7px; margin-top: 35px;">
+          {{ taskIndex }}
+      </div>
+
+      <div style="padding: 18px; position: absolute; right: 0px;">
+        <a href="#" data-target="sidenav-2" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      </div>
+
+      <div style="padding: 18px; position: absolute; right: 0px; margin-top: 70px;">
+        <a href="#" v-on:click="IncrementTaskIndex(-1)"><i class="material-icons">fast_rewind</i></a>
+      </div>
+
+      <div style="padding: 18px; position: absolute; right: 0px; margin-top: 105px;">
+        <a href="#" v-on:click="IncrementTaskIndex(1)"><i class="material-icons">fast_forward</i></a>
+      </div>
+
+      
 
       <div id="test-swipe-2">
           <div class="customPadding row opacTransiion" id="collectionInput">
@@ -146,8 +199,8 @@
               <form class="col s12">
                 <div class="row">
                   <div class="input-field col s11">
-                    <input id="collectionPath" placeholder="どこ━━━━(゜∀゜三゜∀゜)━━━━!!??" type="text" class="validate">
-                    <label for="collectionPath">Enter Keyword</label>
+                    <textarea id="textarea1" class="materialize-textarea" data-original-height=0 placeholder="どこ━━━━(゜∀゜三゜∀゜)━━━━!!??" ></textarea>
+                    <label for="textarea1">Enter Keyword</label>
                   </div>
   
                   <!--<div class="input-field col uploadBtn" style="margin-left: -50px; margin-top: 25px; z-index: 998; width: 38px;">
@@ -161,6 +214,10 @@
                   
                   <a class="btn-floating btn-small waves-effect waves-light" style="margin-top: 20px; margin-left: 5px;" id="submitCollection">
                     <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">send</i>
+                  </a>
+
+                  <a class="btn-floating btn-small waves-effect waves-light" style="margin-top: 20px; margin-left: 5px;" id="submitTask">
+                    <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">description</i>
                   </a>
                 </div>
               </form>
@@ -243,13 +300,14 @@
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/clipboard.js/1.5.3/clipboard.min.js"></script>
     <script type="text/javascript">
 
       $(document).ready(function(){        
         $('#DelayHolder').css('display', '')
 
-        $('.sidenav').sidenav();
+        $('#sidenav-1').sidenav({edge: 'left'});
+        $('#sidenav-2').sidenav({edge: 'right'});
         
         $('.tabs').tabs( {
           duration : 500,
@@ -261,20 +319,33 @@
         $('#collectionInputHidden').css('display', 'none');
 
         $('#submitCollection').click(event => {
-            const param = $('#collectionPath').val()
-            $.ajax('/search?param=' + param).done(data => {
-              collectionVue.types = Object.keys(data)
-              collectionVue.collections = Object.values(data)
-              collectionVue.currentIndex = new Array(collectionVue.collections.length).fill(0)
-              collectionVue.leastIndex = new Array(collectionVue.collections.length).fill(0)
-              collectionVue.mostIndex = new Array(collectionVue.collections.length)
-              for (let i = 0; i < collectionVue.mostIndex.length; ++i) {
-                collectionVue.mostIndex[i] = collectionVue.collections[i].length
-              }
-              collectionVue.$forceUpdate()
-              M.toast({html: 'Done!', displayLength: 1000})
-            })
+            collectionVue.RunTask()
         })
+
+        $('#submitTask').click(event => {
+            const splitted = $('#textarea1').val().split('\n').filter(x => x.length > 0).filter(x => !x.includes('http://') && !x.includes('https://'))
+            splitted.map(x => collectionVue.taskList.push(x))
+            collectionVue.taskIndex = -1
+            $('#textarea1').val('')
+            M.textareaAutoResize($('#textarea1'));
+
+            // workaround for M.textareaAutoResize
+            $('#textarea1').css('height', '')
+        })
+
+        const clipboard = new Clipboard('.copyBtn');
+
+        clipboard.on('success', function(e) {
+            console.info('Accion:', e.action);
+            console.info('Texto:', e.text);
+            console.info('Trigger:', e.trigger);
+
+            e.clearSelection();
+        });
+        clipboard.on('error', function(e) {
+            console.error('Accion:', e.action);
+            console.error('Trigger:', e.trigger);
+        });
 
       });
 
@@ -297,7 +368,9 @@
             indexPerPage: 6,
             paginationPerPage: 15,
             paginationStride: 5,
-            copyList: []
+            copyList: [],
+            taskList: [],
+            taskIndex: -1
         },
         computed: {
           copyListStr: function() {
@@ -338,12 +411,6 @@
           deleteMemo: function(listId) {
             this.copyList.splice(listId, 1)
           },
-          copyClipboard: function() {
-            new ClipboardJS('#copyClipboardBtn');
-            console.log(this.copyListStr)
-            M.toast({html: `Copy ${this.copyList.length} Entries`, displayLength: 1000})
-            this.clearCopyList(true)
-          },
           clearCopyList: function(silent=false) {
             const len = this.copyList.length
             while(this.copyList.length > 0){
@@ -351,6 +418,40 @@
             }
             if(!silent){
               M.toast({html: `Delete ${len} Entries`, displayLength: 1000})
+            }
+
+            this.taskIndex = -1
+          },
+          IncrementTaskIndex: function(increment) {
+            const val = increment + this.taskIndex
+            this.taskIndex = (val >= this.taskList.length ? this.taskList.length - 1 : (val <= -1 ? -1 : val))
+            $('#textarea1').val(this.taskList[this.taskIndex])
+          },
+          RunTask: function() {
+            const param =  $('#textarea1').val()
+            $.ajax('/search?param=' + param).done(data => {
+              collectionVue.types = Object.keys(data)
+              collectionVue.collections = Object.values(data)
+              collectionVue.currentIndex = new Array(collectionVue.collections.length).fill(0)
+              collectionVue.leastIndex = new Array(collectionVue.collections.length).fill(0)
+              collectionVue.mostIndex = new Array(collectionVue.collections.length)
+              for (let i = 0; i < collectionVue.mostIndex.length; ++i) {
+                collectionVue.mostIndex[i] = collectionVue.collections[i].length
+              }
+              collectionVue.$forceUpdate()
+              M.toast({html: 'Done!', displayLength: 1000})
+            })
+          },
+          deleteTask: function(listId) {
+            this.taskList.splice(listId, 1)
+          },
+          clearTaskList: function(silent=false) {
+            const len = this.taskList.length
+            while(this.taskList.length > 0){
+              this.taskList.pop()
+            }
+            if(!silent){
+              M.toast({html: `Delete ${len} Tasks`, displayLength: 1000})
             }
           }
         },
@@ -369,8 +470,7 @@
 
               // clamp the range
               let limit = parseInt((this.collections[idx].length + this.indexPerPage[idx] - 1)/ this.indexPerPage[idx]);
-              val = val < 0 ? 0 : val >= limit ? limit - 1: val;
-              
+              val = val < 0 ? 0 : val >= limit ? limit - 1: val;              
               
               // update once since updatePaginationIndexes need it
               this.currentIndex[idx] = val;
@@ -381,7 +481,7 @@
             }
 
             return this.currentIndex
-          },
+          }
         }
       })
 
