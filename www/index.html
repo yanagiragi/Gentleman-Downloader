@@ -96,7 +96,50 @@
 
   </head>
   <!--<body style="height: -webkit-fill-available; overflow: hidden;">-->
-  <body style="height: -webkit-fill-available; "></body>
+  <body style="height: -webkit-fill-available; ">
+
+    <div id="collectionMainPage">
+
+      <ul id="slide-out" class="sidenav">
+        <li><div class="user-view">
+          <div class="background">
+            <img src="img/bg.jpg">
+          </div>
+        </div></li>
+
+        <li>
+            <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="clearCopyList">
+              <i class="material-icons">clear</i>Clear List
+            </a>
+          </li>
+
+        <li>
+          <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="copyClipboard" id="copyClipboardBtn" v-bind:data-clipboard-text="copyListStr">
+            <i class="material-icons">content_copy</i>Copy List
+          </a>
+        </li>
+       
+        <div style="padding-left: 30px; padding-right: 30px;">
+          <div v-for="(list, listId) in copyList" style="padding-bottom: 12px;">
+            <div style="background: inherit; position: absolute;margin-left: -10px; margin-top: 3px;">
+               <div class="uploadBtn" v-on:click="deleteMemo(listId)">
+                  <i class="material-icons">clear</i>
+                </div>
+            </div>
+            <div style="margin-left: 20px;">
+              <a rel="noopener" target="_blank" v-bind:href="list.href">
+                  {{ list.title }}
+              </a>
+            </div>
+           
+          </div>
+        </div>
+        
+      </ul>
+      <div style="padding: 18px; position: absolute;">
+        <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      </div>
+
       <div id="test-swipe-2">
           <div class="customPadding row opacTransiion" id="collectionInput">
               <h6 style="padding: 10px; padding-bottom: 5px;">Inputs</h6>
@@ -127,10 +170,8 @@
                   <div class="indeterminate"></div>
               </div>
           </div>
-          <div class="customPadding2 opacTransiion" id="collectionResult">
-      
-            <div class="row" v-for="(collection, typeIdx) in collections">  
-              
+          <div class="customPadding2 opacTransiion" id="collectionResult">      
+            <div class="row" v-for="(collection, typeIdx) in collections">               
               <h6 style="padding: 10px;">{{ types[typeIdx] }} Results: </h6>              
                     
               <ul class="pagination" style="text-align: center;">                
@@ -153,7 +194,15 @@
               <div v-if="collection.length !== 0" v-for="(n, index) in indexPerPage" class="col s12 m2">
                 <div class="card" v-if="(indexPerPage * currentIndex[typeIdx] + index) < collections[typeIdx].length" :key="indexPerPage * currentIndex[typeIdx] + index">
                   <div class="card-image waves-effect waves-block waves-light">
+                    
+                      <a class="deep-orange darken-1 btn-floating btn-small waves-effect waves-light" style=" margin-top: 10px;  margin-right: -26px; position: absolute; right: 40px;" v-on:click="memo(typeIdx, (indexPerPage * currentIndex[typeIdx] + index))">
+                          <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">add_shopping_cart</i>
+                        </a>
+    
+
                     <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" v-bind:height="screen.height / 3.6">
+                    
+                    
                   </div>
                   <div class="card-content">
                     <div 
@@ -187,18 +236,20 @@
         </div>
       </div>
 
-    </div> <!-- end of  <div style="height: -webkit-fill-available;">-->
+    </div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
     <script type="text/javascript">
 
       $(document).ready(function(){        
         $('#DelayHolder').css('display', '')
+
+        $('.sidenav').sidenav();
         
         $('.tabs').tabs( {
           duration : 500,
@@ -221,7 +272,7 @@
                 collectionVue.mostIndex[i] = collectionVue.collections[i].length
               }
               collectionVue.$forceUpdate()
-              M.toast({html: 'Done!'})
+              M.toast({html: 'Done!', displayLength: 1000})
             })
         })
 
@@ -235,7 +286,7 @@
       });
 
       var collectionVue = new Vue({
-        el: '#collectionResult',
+        el: '#collectionMainPage',
         data: {
             status: 'null',
             types : [],
@@ -245,7 +296,17 @@
             mostIndex: [],
             indexPerPage: 6,
             paginationPerPage: 15,
-            paginationStride: 5
+            paginationStride: 5,
+            copyList: []
+        },
+        computed: {
+          copyListStr: function() {
+            let str = ''
+            for (const iterator of this.copyList) {
+              str += `${iterator.href} `
+            }
+            return str
+          }
         },
         methods:
         {
@@ -255,7 +316,6 @@
 					  return `font-size: ${size}px;`
           },
           passIndex : function(typeIdx, idx){
-            console.log(typeIdx, this.currentIndex[typeIdx], idx)
             let limit = parseInt((this.collections[typeIdx].length + this.indexPerPage - 1)/ this.indexPerPage);
             this.currentIndex[typeIdx] = idx < 0 ? 0 : idx < limit ? idx : limit - 1 ;
             this.$forceUpdate()
@@ -270,6 +330,28 @@
             // Without this clamp, the leastIndex will continues to minus with currentIndex increases
             // results in displayed pagination amount != (2 * paginationStride + 1)
             this.leastIndex[idx] = (this.mostIndex[idx]  - this.paginationPerPage) > 0 ? (this.mostIndex[idx]  - this.paginationPerPage) : 0;
+          },
+          memo : function(typeId, collectionId) {
+            M.toast({html: 'Add ' + this.collections[typeId][collectionId].title, displayLength: 1000})
+            this.copyList.push(this.collections[typeId][collectionId])
+          },
+          deleteMemo: function(listId) {
+            this.copyList.splice(listId, 1)
+          },
+          copyClipboard: function() {
+            new ClipboardJS('#copyClipboardBtn');
+            console.log(this.copyListStr)
+            M.toast({html: `Copy ${this.copyList.length} Entries`, displayLength: 1000})
+            this.clearCopyList(true)
+          },
+          clearCopyList: function(silent=false) {
+            const len = this.copyList.length
+            while(this.copyList.length > 0){
+              this.copyList.pop()
+            }
+            if(!silent){
+              M.toast({html: `Delete ${len} Entries`, displayLength: 1000})
+            }
           }
         },
         watch: {
@@ -282,8 +364,6 @@
             this.paginationStride = parseInt((this.paginationPerPage - 1) / 2)
           },
           currentIndex: function (newVal) {
-            console.log(newVal)
-
             for(let idx = 0; idx < this.types.length; ++idx){              
               let val = newVal[idx]
 
