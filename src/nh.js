@@ -68,8 +68,11 @@ class NH
         
         for(let i = 0; i < blocks.length; ++i) {
             const name = $('.caption', blocks[i]).text()
-            const href = 'https://nhentai.net/' + $('a', blocks[i]).attr('href')
-            const thumb = $('.lazyload', blocks[i]).attr('data-src')
+            const href = 'https://nhentai.net' + $('a', blocks[i]).attr('href')
+            const dataSrc =  $('.lazyload', blocks[i]).attr('data-src')
+            const src = $('img', blocks[i]).attr('src')
+            // for some result, thumbnails stores in src, else stores in data-src
+            const thumb = (dataSrc != null && !dataSrc.includes('data:image/gif')) ? dataSrc : src
             candidates.push({title: name, href: href, thumb: thumb})
         }
         
