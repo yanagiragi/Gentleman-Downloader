@@ -5,6 +5,7 @@ const path = require('path')
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const helmet = require('helmet');
+const { EH, NH, Wnacg, Ahri } = require('..')
 
 const app = express()
 
@@ -17,7 +18,7 @@ app.use(cookieParser(TOKEN))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(express.static(path.join(__dirname, 'assets')));
-app.listen(3003)
+app.listen(3004)
 
 app.use(function (req, res, next) {
 	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
@@ -32,8 +33,7 @@ app.use(function (req, res, next) {
 		next()
 	}
 	else {
-        // res.redirect('/login')
-        next()
+        res.redirect('/login')
 	}
 })
 
@@ -60,4 +60,16 @@ app.post('/login', (req, res) => {
 	else {
 		res.redirect('/login')
 	}
+})
+
+app.get('/search', async (req, res) => {
+    const keyword = req.query.param
+    const slice = 6
+    const EHResults = await EH.Search(keyword, slice)
+    const NHResults = await NH.Search(keyword, slice)
+    const WnacgResults = await Wnacg.Search(keyword, slice)
+    const AhriResults = await Ahri.Search(keyword, slice)
+    const results = {EH: EHResults, NH: NHResults, Wnacg: WnacgResults, Ahri: AhriResults }
+
+    res.send(results)
 })

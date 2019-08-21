@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>G-D</title>
+    <title>Gentleman</title>
     
     <!-- Compiled and minified CSS --> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -44,8 +44,8 @@
       }
 
       body {
-        /*background: url('img/bg2.jpg');*/
-        background: url('img/bg1.jpg');
+        /*background: url('img/bg1.jpg');*/
+        background: url('img/bg.png');
         background-repeat: repeat;
         background-size : 100%;
         color:  grey;
@@ -116,7 +116,7 @@
                   </div>-->
                   
                   <a class="btn-floating btn-small waves-effect waves-light" style="margin-top: 20px; margin-left: 5px;" id="submitCollection">
-                    <i class="material-icons">send</i>
+                    <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">send</i>
                   </a>
                 </div>
               </form>
@@ -127,63 +127,54 @@
               </div>
           </div>
           <div class="customPadding2 opacTransiion" id="collectionResult">
-            <h6 style="padding: 10px;">Results: {{ status }} </h6>
-            
-            <ul class="pagination" v-if="collections.length !== 0" style="text-align: center;">
-              <li class="waves-effect" v-on:click="passIndex(currentIndex - 1)"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
-              <li v-if="leastIndex != 0">...</li>
+      
+            <div class="row" v-for="(collection, typeIdx) in collections">  
               
-              <li v-for="(n, index) in (mostIndex - leastIndex)" class="waves-effect" v-bind:class="{ active: (index + leastIndex) === currentIndex }" v-on:click="passIndex(index + leastIndex)">
-                <a href="#!" style="font-size: 14px;"> {{ leastIndex + index + 1 }} </a>
-              </li>
-              
-              <li  v-if="mostIndex != parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage)">...</li>
-              <li class="waves-effect" v-on:click="passIndex(currentIndex + 1)"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
-            </ul>
-            
-            <div class="row">
-              <div v-if="collections.length !== 0" v-for="(n, index) in indexPerPage" class="col s12 m4">
-                <div class="card" v-if="(indexPerPage * currentIndex + index) < collections.length" :key="indexPerPage * currentIndex + index">
+              <h6 style="padding: 10px;">{{ types[typeIdx] }} Results: </h6>              
+                    
+              <!--<ul class="pagination" v-if="collections.length !== 0" style="text-align: center;">
+                <li class="waves-effect" v-on:click="passIndex(currentIndex - 1)"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+                <li v-if="leastIndex != 0">...</li>
+                
+                <li v-for="(n, index) in (mostIndex - leastIndex)" class="waves-effect" v-bind:class="{ active: (index + leastIndex) === currentIndex }" v-on:click="passIndex(index + leastIndex)">
+                  <a href="#!" style="font-size: 14px;"> {{ leastIndex + index + 1 }} </a>
+                </li>
+                
+                <li  v-if="mostIndex != parseInt((this.collections.length + this.indexPerPage - 1)/ this.indexPerPage)">...</li>
+                <li class="waves-effect" v-on:click="passIndex(currentIndex + 1)"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+              </ul>      -->
+  
+
+              <div v-if="collection.length !== 0" v-for="(n, index) in indexPerPage" class="col s12 m2">
+                <div class="card" v-if="(indexPerPage * currentIndex + index) < collection.length" :key="indexPerPage * currentIndex + index">
                   <div class="card-image waves-effect waves-block waves-light">
-                    <img class="activator" v-bind:src="collections[(indexPerPage * currentIndex + index)].preview">
+                    <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex + index)].thumb" v-bind:height="screen.height / 3.6">
                   </div>
                   <div class="card-content">
-                    <div class="card-title activator grey-text text-darken-4" style="font-size: 20px; height: 32px; text-overflow: ellipsis; overflow: hidden; text-align: center;">
-                      {{ collections[(indexPerPage * currentIndex + index)].name }}
+                    <div class="card-title activator grey-text text-darken-4" style="font-size: 20px; text-overflow: ellipsis; height: 60px; text-align: center; overflow: hidden;" v-bind:style="getFontSize(collection[(indexPerPage * currentIndex + index)].title)">
+                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex + index)].href" rel="noopener">
+                          {{ collection[(indexPerPage * currentIndex + index)].title }}
+                        </a>
                     </div>					  
                   </div>
                   <div class="card-reveal">
                     <div class="card-title grey-text text-darken-4" style="font-size: 16px; font-weight: bold; text-overflow: ellipsis; overflow: hidden;">
-                      {{ collections[(indexPerPage * currentIndex + index)].name }}
+                      {{ collection[(indexPerPage * currentIndex + index)].title }}
                     </div>
                     <div style="width: 80%; word-wrap: break-word;">
-                        <br>{{ collections[(indexPerPage * currentIndex + index) ].path }}<br><br>{{ collections[(indexPerPage * currentIndex + index)].preview }}
+                        <br>
+                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex + index)].href" rel="noopener">
+                          {{ collection[(indexPerPage * currentIndex + index) ].href }}
+                        </a>
+                        <br><br>
+                        <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex + index)].thumb" rel="noopener">
+                        {{ collection[(indexPerPage * currentIndex + index) ].thumb }}
+                        </a>
                     </div>
                   </div>      
                 </div>	
               </div>
-              <div v-if="collections.length === 0">
-                <div v-for="d in 3" class="col s12 m4">
-                  <div class="card">
-                    <div class="card-image waves-effect waves-block waves-light">
-                      <img class="activator" v-bind:src="`img/bg.png`">
-                    </div>
-                    <div class="card-content">
-                      <div class="card-title activator grey-text text-darken-4" style="height: 32px; text-overflow: ellipsis; overflow: hidden; text-align: center;">
-                        {{ ['This', 'Is', 'Placeholder'][d - 1] }}
-                      </div>					  
-                    </div>
-                    <div class="card-reveal">
-                      <div class="card-title grey-text text-darken-4"  style="font-size: 16px; font-weight: bold; text-overflow: ellipsis; overflow: hidden;">
-                          {{ ['This', 'This', 'This'][d - 1] }}
-                      </div>
-                      <div style="width: 80%; word-wrap: break-word;">
-                          <br> {{ ['Is', 'Is', 'Is'][d - 1] }}<br><br> {{ ['Placeholder', 'Placeholder', 'Placeholder'][d - 1] }}
-                      </div>
-                    </div>      
-                  </div>	
-                </div>
-              </div>
+              
             </div>
         </div>
       </div>
@@ -209,14 +200,33 @@
         // Disable Hiddle Blocks
         $('#generateInputHidden').css('display', 'none');
         $('#collectionInputHidden').css('display', 'none');
+
+        $('#submitCollection').click(event => {
+            const param = $('#collectionPath').val()
+            $.ajax('/search?param=' + param).done(data => {
+              collectionVue.types = Object.keys(data)
+              collectionVue.collections = Object.values(data)
+              console.log(Object.entries(data))
+              M.toast({html: 'Done!'})
+            })
+        })
+
+      });
+
+      $(document).keypress((event) => {
+          if (event.which == '13') {
+            // Disable "Enter" Key For Form
+            event.preventDefault();
+          }
       });
 
       var collectionVue = new Vue({
         el: '#collectionResult',
         data: {
             status: 'null',
+            types : [],
             collections : [],
-            currentIndex: -1,
+            currentIndex: 0,
             leastIndex: 0,
             mostIndex: 0,
             indexPerPage: 6,
@@ -226,7 +236,8 @@
         methods:
         {
           getFontSize : function(str){
-					  var size = 16 - ((str.length - 10) / 4)
+            var size = 24 - ((str.length - 12) / 3.5)
+            size = size < 16 ? 16 : size
 					  return `font-size: ${size}px;`
           },
           passIndex : function(idx){
