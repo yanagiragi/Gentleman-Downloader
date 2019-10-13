@@ -17,7 +17,7 @@ class NH
         const $ = this.DOM
         const pageCount = $('.thumb-container img').length
         if(pageCount === 0) {
-            console.error(`Error On ${url}, maybe be 503 Service Temporarily Unavailable, will retry later.`)
+            console.error(`Error On ${this.url}, maybe be 503 Service Temporarily Unavailable, will retry later.`)
         }
 
         const pics = $('.thumb-container a')
