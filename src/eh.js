@@ -19,7 +19,9 @@ class EH
             
             const result = await RequestAsync(url)
             const $ = ParseDOM(result)
-            const pics = $('.gdtm')
+
+            // .gdtl for ex, .gdtm for eh
+            const pics = $('.gdtm').length == 0 ? $('.gdtl') : $('.gdtm')
 
             if(this.verbose) {
                 console.log(`Found ${pics.length} Pics On ${this.title}, pagecount = ${i+1}/${this.totalPageCount}`)

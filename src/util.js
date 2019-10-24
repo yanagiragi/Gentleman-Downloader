@@ -1,6 +1,9 @@
+const fs = require('fs')
+const path = require('path')
 const fetch = require('node-fetch')
 const cheerio = require('cheerio')
 
+const cookie = fs.existsSync(path.join(__dirname, 'cookie.txt')) ? fs.readFileSync(path.join(__dirname, 'cookie.txt')) : ''
 const timeout = 10 // unit: seconds
 
 function FormURI (link) {
@@ -20,7 +23,8 @@ function GetRequestOptions (opts) {
 			'Connection': 'keep-alive',
 			'Upgrade-Insecure-Requests': '1',
 			'Pragma': 'no-cache',
-			'Cache-Control': 'no-cache'
+			'Cache-Control': 'no-cache',
+			'Cookie': cookie
 		}
 	}
 
@@ -30,6 +34,7 @@ function GetRequestOptions (opts) {
 	const options = Object.assign(defaultOptions, typeof opts === 'object' ? opts : { uri: opts })
 	options.uri = (options.uri === '' || options.uri === undefined) ? options.url : options.uri
 	options.uri = FormURI(options.uri)
+	options.uri = (options.uri.includes('exhentai') && cookie == '') ? options.uri.replace('exhentai', 'e-hentai') : options.uri
 	return options
 }
 

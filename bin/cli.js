@@ -31,7 +31,7 @@ async function Process(url)
 {
     let agent;
     if (url.includes('exhentai')) {
-        agent = new EH(url.replace('exhentai', 'e-hentai'))        
+        agent = new EH(url)
 	}
 	else if (url.includes('e-hentai')) {
         agent = new EH(url)        
