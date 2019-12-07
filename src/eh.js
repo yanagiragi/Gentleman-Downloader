@@ -62,13 +62,11 @@ class EH
         const $ = this.DOM
         const pageCount = $('.ptt td a')
 		    .toArray()
-            .filter(x => x.type && x.type === 'tag')
-            .map(x => parseInt(x.children[0].data)) // equal to split of $('.ptt td a').text()
+            .map(x => parseInt($(x).text()))
             .filter(Number.isInteger) // get rid of '<' and '>'
-            .sort()
+            .sort((a,b) => a - b)
             .pop()
-        this.totalPageCount = parseInt(pageCount)
-        
+        this.totalPageCount = parseInt(pageCount)        
     }
 
     async ParseName() {        
