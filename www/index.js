@@ -9,7 +9,7 @@ const { EH, NH, Wnacg, Ahri } = require('..')
 
 const app = express()
 
-const PASSWORD = process.env.GDW_PASSWORD
+const PASSWORD = process.env.GDW_PASSWORD || 'pass'
 const TOKEN = Date.now().toString()
 
 app.use(helmet());

@@ -4,7 +4,7 @@ const fetch = require('node-fetch')
 const cheerio = require('cheerio')
 
 const cookie = fs.existsSync(path.join(__dirname, 'cookie.txt')) ? fs.readFileSync(path.join(__dirname, 'cookie.txt')) : ''
-const timeout = 10 // unit: seconds
+const timeout = 30 // unit: seconds
 
 function FormURI (link) {
 	return new URL(link).toString()
