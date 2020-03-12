@@ -8,7 +8,7 @@ const RequestAsync = require('request-promise')
 
 const StoragePath = path.join(__dirname, 'Storage')
 const errFilesPath = path.join(__dirname, 'Storage', 'err.json')
-const errFiles = JSON.parse(fs.readFileSync(errFilesPath))
+const errFiles = fs.existsSync(errFilesPath) ? JSON.parse(fs.readFileSync(errFilesPath)) : []
 
 if(require.main === module)
 {
