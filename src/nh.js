@@ -26,11 +26,14 @@ class NH
         }
 
         for(let i = 0; i < pics.length; ++i){
-            let e = $('img', pics[i])
-            let src = new URL(e.attr('data-src'))
-            src = `${src.origin.replace('t.', 'i.')}${src.pathname.replace('t.', '.')}`
+            const href = new URL(`https://nhentai.net${$(pics[i]).attr('href')}`)
+            const text = await RequestAsync(href.toString())
+            const new$ = ParseDOM(text)
+            const img = new$('#image-container img')
+            const src = img.attr('src')
             const pic = { 'href': src, id: (this.pics.length + 1) }
             this.pics.push(pic)
+            console.log(`Get ${i} pic src: ${src}`)
         }
     }
 
@@ -48,7 +51,7 @@ class NH
         }
     }
 
-    async ParseName() {        
+    async ParseName() {
         const $ = this.DOM
         const jpTitle = $('#info h2').text()
 	    const engTitle = $('#info h1').text()	
