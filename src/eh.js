@@ -61,7 +61,7 @@ class EH
     async ParseTotalPageCount() {
         const $ = this.DOM
         const pageCount = $('.ptt td a')
-		    .toArray()
+            .toArray()
             .map(x => parseInt($(x).text()))
             .filter(Number.isInteger) // get rid of '<' and '>'
             .sort((a,b) => a - b)
@@ -72,7 +72,7 @@ class EH
     async ParseName() {        
         const $ = this.DOM
         const jpTitle = $('#gd2 #gj').text()
-		const engTitle = $('#gd2 #gn').text()
+        const engTitle = $('#gd2 #gn').text()
         this.jpTitle = jpTitle
         this.engTitle = engTitle
         

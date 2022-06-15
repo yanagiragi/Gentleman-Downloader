@@ -1,27 +1,22 @@
-const path = require('path')
-const fs = require('fs-extra')
 const pMap = require('p-map')
-const sanitize = require('sanitize-filename')
 
 const { EH, NH, Wnacg, Ahri } = require('..')
-const RequestAsync = require('request-promise')
-
-const StoragePath = __dirname + '/Storage/'
 
 if(require.main === module)
 {
-	(async () => {        
-		const urls = process.argv.splice(2)	
-		if(urls.length === 0){
-			console.log("Example: node main.js $keyword [$keyword...]")
-		}
+    (async () => {
+        // eslint-disable-next-line no-undef
+        const urls = process.argv.splice(2)	
+        if(urls.length === 0){
+            console.log('Example: node main.js $keyword [$keyword...]')
+        }
 
-		const mapper = async url => {
-			return await Process(url)
-		};
+        const mapper = async url => {
+            return await Process(url)
+        }
 
-		const result = await pMap(urls, mapper, {concurrency: 5});
-	})()
+        await pMap(urls, mapper, {concurrency: 5})
+    })()
 }
 
 async function Process(keyword)

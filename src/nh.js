@@ -54,7 +54,7 @@ class NH
     async ParseName() {
         const $ = this.DOM
         const jpTitle = $('#info h2').text()
-	    const engTitle = $('#info h1').text()	
+        const engTitle = $('#info h1').text()	
         this.jpTitle = jpTitle
         this.engTitle = engTitle
         this.title = this.useJpTitle ? this.jpTitle : this.engTitle

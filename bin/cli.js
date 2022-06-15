@@ -6,47 +6,50 @@ const sanitize = require('sanitize-filename')
 const { EH, NH, Wnacg, Ahri } = require('..')
 const RequestAsync = require('request-promise')
 
+// eslint-disable-next-line no-undef
 const StoragePath = path.join(__dirname, 'Storage')
+// eslint-disable-next-line no-undef
 const errFilesPath = path.join(__dirname, 'Storage', 'err.json')
 const errFiles = fs.existsSync(errFilesPath) ? JSON.parse(fs.readFileSync(errFilesPath)) : []
 
 if(require.main === module)
 {
-	(async () => {
+    (async () => {
         
         fs.ensureDirSync(StoragePath)
 	
-		const urls = process.argv.splice(2)	
-		if(urls.length === 0){
-			console.log("Example: node main.js $url [$url...]")
-		}
+        // eslint-disable-next-line no-undef
+        const urls = process.argv.splice(2)	
+        if(urls.length === 0){
+            console.log('Example: node main.js $url [$url...]')
+        }
 
-		const mapper = async url => {
-			return await Process(url)
-		};
+        const mapper = async url => {
+            return await Process(url)
+        }
 
-		const result = await pMap(urls, mapper, {concurrency: 5});
-	})()
+        await pMap(urls, mapper, {concurrency: 5})
+    })()
 }
 
 async function ProcessUrl(url)
 {
-    let agent;
+    let agent
     if (url.includes('exhentai')) {
         agent = new EH(url)
-	}
-	else if (url.includes('e-hentai')) {
+    }
+    else if (url.includes('e-hentai')) {
         agent = new EH(url)        
     }    
-	else if (url.includes('nhentai')) {
-		agent = new NH(url)
+    else if (url.includes('nhentai')) {
+        agent = new NH(url)
     }
     else if (url.includes('wnacg')) {
-		agent = new Wnacg(url)
+        agent = new Wnacg(url)
     }
     else if (url.includes('ahri')) {
-		agent = new Ahri(url)
-	}
+        agent = new Ahri(url)
+    }
     
     try {
         // Setup titles, totalPageCount, MetaDatas
@@ -85,7 +88,7 @@ async function ProcessUrl(url)
     }
     catch (err) {
         console.log(`Error On ${err}`)
-        console.log(`Abort.`)
+        console.log('Abort.')
     }    
 }
 

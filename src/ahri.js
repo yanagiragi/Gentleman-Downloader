@@ -21,11 +21,11 @@ class Ahri
 
             const http_image = result.match(/var HTTP_IMAGE = "(.*)";/)[1]
             const script = result.substring(
-                    result.indexOf('Original_Image_List = [') + 'Original_Image_List = ['.length - 1,
-                    result.indexOf(`"version":"0"}]`) + `"version":"0"}]`.length)
+                result.indexOf('Original_Image_List = [') + 'Original_Image_List = ['.length - 1,
+                result.indexOf('"version":"0"}]') + '"version":"0"}]'.length)
             
             try {
-                const data = JSON.parse(script)                
+                const data = JSON.parse(script)
                 const pics = data.reduce((acc, ele) => {
                     const src = `${http_image}${ele['new_filename']}_w1100.${ele['extension']}`
                     return acc.concat({ href: src, id: ele.sort })
@@ -33,6 +33,7 @@ class Ahri
                 this.pics = pics
             }
             catch (err) {
+                console.error(err?.message)
                 throw err
             }
         }
@@ -52,10 +53,10 @@ class Ahri
         }
     }
 
-    async ParseName() {        
+    async ParseName() {
         const $ = this.DOM
         const title = $('.page-title a[href^="post"]').text().trim()
-	    this.title = title
+        this.title = title
     }
 
     // only fetch one page, returns top 5 results
