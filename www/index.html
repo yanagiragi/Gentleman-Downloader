@@ -280,7 +280,7 @@
                       <a class="deep-orange darken-1 btn-floating btn-small waves-effect waves-light" style=" margin-top: 10px;  margin-right: -26px; position: absolute; right: 40px;" v-on:click="memo(typeIdx, (indexPerPage * currentIndex[typeIdx] + index))">
                         <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">add_shopping_cart</i>
                       </a>
-                    <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" v-bind:height="screen.height / 3.6">
+                    <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" height="360">
                     
                   </div>
                   <div class="card-content">
@@ -321,7 +321,7 @@
     
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/clipboard.js/1.5.3/clipboard.min.js"></script>
     <script type="text/javascript">
 
