@@ -23,7 +23,7 @@ class Wnacg
         const result = await RequestAsync(this.url)
         this.DOM = ParseDOM(result)
         this.ParseName()
-        this.ParseMeta()    
+        this.ParseMeta()
     }
     
     async ParseMeta()
@@ -33,18 +33,18 @@ class Wnacg
         }
     }
 
-    async ParseName() {        
+    async ParseName() {
         const $ = this.DOM
-        const title = $('#bodywrap h2').text()		
+        const title = $('#bodywrap h2').text()
         this.title = title
     }
 
     // only fetch one page, returns top 5 results
     static async Search(keywords, returnResults=5) {
-        const url = `https://www.wnacg.org/albums-index-page-1-sname-${encodeURIComponent(keywords)}.html`
-        const result = await RequestAsync(url)        
+        const url = `https://www.wnacg.org/search/?q=${encodeURIComponent(keywords)}&f=_all&s=create_time_DESC&syn=yes`
+        const result = await RequestAsync(url)
         const $ = ParseDOM(result)
-        const blocks = $('.gallary_item')        
+        const blocks = $('.gallary_item')
         let candidates = []
 
         for(let i = 0; i < blocks.length; ++i) {
