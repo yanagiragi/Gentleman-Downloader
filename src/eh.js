@@ -66,10 +66,10 @@ class EH
             .filter(Number.isInteger) // get rid of '<' and '>'
             .sort((a,b) => a - b)
             .pop()
-        this.totalPageCount = parseInt(pageCount)        
+        this.totalPageCount = parseInt(pageCount)
     }
 
-    async ParseName() {        
+    async ParseName() {
         const $ = this.DOM
         const jpTitle = $('#gd2 #gj').text()
         const engTitle = $('#gd2 #gn').text()
@@ -84,15 +84,15 @@ class EH
         const url = `https://e-hentai.org/?f_search=${encodeURIComponent(keywords)}`
         const result = await RequestAsync(url)
         const $ = ParseDOM(result)
-        const blocks = $('.itg.gld div.gl1t')
+        const blocks = $('.gltc tr')
 
         let candidates = []
 
         for(let i = 0; i < blocks.length; ++i) {
             const name = $('.glink', blocks[i]).text()
-            const href = $('.gl3t a', blocks[i]).attr('href')
-            const thumb = $('.gl3t img', blocks[i]).attr('src')
-            
+            const href = $('.gl3c a', blocks[i]).attr('href')
+            const thumb = $('.gl2c .glthumb img', blocks[i]).attr('data-src')
+
             if(name.length == 0) {
                 continue
             }
