@@ -22,7 +22,7 @@ async function Process (keyword) {
     const EHResults = await EH.Search(keyword)
     const NHResults = await NH.Search(keyword)
     const WnacgResults = await Wnacg.Search(keyword)
-    const AhriResults = await Ahri.Search(keyword)
+    const AhriResults = [] // await Ahri.Search(keyword) // not work due to obfuscation for now
 
     const results = { EH: EHResults, NH: NHResults, Wnacg: WnacgResults, Ahri: AhriResults }
 
