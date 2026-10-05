@@ -44,7 +44,9 @@ async function RequestAsync (opts) {
     try {
         const response = await fetch(options.uri, options)
         if(response.ok){
-            return await response.text()
+            return options.encoding === 'binary'
+                ? await response.buffer()
+                : await response.text()
         } else {
             throw response
         }

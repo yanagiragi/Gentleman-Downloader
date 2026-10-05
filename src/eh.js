@@ -20,16 +20,19 @@ class EH
             const result = await RequestAsync(url)
             const $ = ParseDOM(result)
 
-            // .gdtl for ex, .gdtm for eh
-            const pics = $('.gdtm').length == 0 ? $('.gdtl') : $('.gdtm')
+            // Older layouts wrap links in .gdtm/.gdtl. The current layout puts
+            // the page links directly under #gdt.
+            let pics = $('.gdtm a, .gdtl a')
+            if(pics.length === 0) {
+                pics = $('#gdt > a')
+            }
 
             if(this.verbose) {
                 console.log(`Found ${pics.length} Pics On ${this.title}, pagecount = ${i+1}/${this.totalPageCount}`)
             }
 
             for(let j = 0; j < pics.length; ++j){
-                const e = $('a', pics[j])
-                const src = await this.GetPicSrc(e.attr('href'))
+                const src = await this.GetPicSrc($(pics[j]).attr('href'))
                 const pic = { 'href': src, id: (this.pics.length + 1) }
                 this.pics.push(pic)
             }

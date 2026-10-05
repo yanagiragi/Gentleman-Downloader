@@ -14,8 +14,12 @@ class Wnacg {
 
         const result = await RequestAsync(this.url.replace('photos-index-aid', 'download-index-aid'))
         const $ = ParseDOM(result)
-        const link = $('.down_btn').attr('href')
-        this.pics.push({ href: link, id: this.title })
+        const relativeLink = $('#download-area a[href*=".zip"], a[href*=".zip"]').first().attr('href')
+        if (relativeLink == null) {
+            throw new Error(`Unable to find Wnacg download link: ${this.url}`)
+        }
+        const link = new URL(relativeLink, this.url).toString()
+        this.pics.push({ href: link, id: this.title, archive: true })
     }
 
     async Setup () {
