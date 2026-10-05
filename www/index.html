@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="referrer" content="no-referrer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gentleman</title>
     
     <!-- Compiled and minified CSS --> 
@@ -96,6 +97,89 @@
         color: red;
       }
 
+      .side-nav-control {
+        position: fixed;
+        z-index: 997;
+      }
+
+      .result-section {
+        margin-bottom: 32px;
+      }
+
+      .result-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2px;
+      }
+
+      .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+        gap: clamp(12px, 2vw, 24px);
+        align-items: stretch;
+      }
+
+      .result-card-cell {
+        min-width: 0;
+      }
+
+      .result-card-cell .card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      .result-card-cell .card-image {
+        aspect-ratio: 2 / 3;
+        background: #eeeeee;
+      }
+
+      .result-card-cell .card-image > img.activator {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .result-card-cell .card-content {
+        flex: 1;
+        padding: 16px;
+      }
+
+      .result-card-title {
+        display: -webkit-box;
+        min-height: 54px;
+        margin: 0 !important;
+        overflow: hidden;
+        text-align: center;
+        text-overflow: ellipsis;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .result-card-cell .card-reveal {
+        overflow-y: auto;
+      }
+
+      .result-card-url {
+        width: 100%;
+        overflow-wrap: anywhere;
+      }
+
+      @media only screen and (max-width: 600px) {
+        .customPadding,
+        .customPadding2 {
+          padding-right: 16px;
+          padding-left: 16px;
+        }
+
+        .results-grid {
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+        }
+      }
+
     </style>
 
   </head>
@@ -126,6 +210,15 @@
             onclick="M.toast({html: `Copy ${collectionVue.copyList.length} Entries`, displayLength: 1000})"
             >
             <i class="material-icons">content_copy</i>Copy List
+          </a>
+        </li>
+
+        <li>
+          <a href="#!"
+            class="grey lighten-1 btn-small btn waves-effect waves-light"
+            v-bind:class="{ disabled: isDownloading }"
+            v-on:click.prevent="downloadCopyList">
+            <i class="material-icons">cloud_download</i>Download List
           </a>
         </li>
        
@@ -193,27 +286,27 @@
       </ul>
 
 
-      <div style="padding: 18px; position: absolute;">
+      <div class="side-nav-control" style="padding: 18px; top: 0; left: 0;">
         <a href="#" data-target="sidenav-1" class="sidenav-trigger"><i class="material-icons">menu</i></a>
       </div>
 
-      <div style="padding: 18px; position: absolute; margin-top: 35px; left: 7px;">
+      <div class="side-nav-control" style="padding: 18px; top: 35px; left: 7px;">
           {{ copyList.length }}
       </div>
 
-      <div style="padding: 18px; position: absolute; right: 7px; margin-top: 35px;">
+      <div class="side-nav-control" style="padding: 18px; top: 35px; right: 7px;">
           <a href="#!" v-on:click="collectionVue.IncrementTaskIndex(-collectionVue.taskIndex-1)">{{ taskIndex }}</a>
       </div>
 
-      <div style="padding: 18px; position: absolute; right: 0px;">
+      <div class="side-nav-control" style="padding: 18px; top: 0; right: 0;">
         <a href="#" data-target="sidenav-2" class="sidenav-trigger"><i class="material-icons">menu</i></a>
       </div>
 
-      <div style="padding: 18px; position: absolute; right: 0px; margin-top: 70px;">
+      <div class="side-nav-control" style="padding: 18px; top: 70px; right: 0;">
         <a href="#" v-on:click="IncrementTaskIndex(-1)"><i class="material-icons">fast_rewind</i></a>
       </div>
 
-      <div style="padding: 18px; position: absolute; right: 0px; margin-top: 105px;">
+      <div class="side-nav-control" style="padding: 18px; top: 105px; right: 0;">
         <a href="#" v-on:click="IncrementTaskIndex(1)"><i class="material-icons">fast_forward</i></a>
       </div>
 
@@ -254,50 +347,52 @@
               </div>
           </div>
           <div class="customPadding2 opacTransiion" id="collectionResult">      
-            <div class="row" v-for="(collection, typeIdx) in collections">               
+            <div class="result-section" v-for="(collection, typeIdx) in collections">
               <h6 style="padding: 10px;">{{ types[typeIdx] }} Results: </h6>              
                     
-              <ul class="pagination" style="text-align: center;">                
-                <ul class="pagination" style="text-align: center;">
-                  <li class="waves-effect" v-on:click="passIndex(typeIdx, currentIndex[typeIdx] - 1)"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
-                  <li v-if="leastIndex[typeIdx] != 0">...</li>
-                  
-                  <li v-for="(n, index) in (mostIndex[typeIdx] - leastIndex[typeIdx])" 
-                      class="waves-effect" 
-                      v-bind:class="{ active: (index + leastIndex[typeIdx]) === currentIndex[typeIdx] }" 
-                      v-on:click="passIndex(typeIdx, index + leastIndex[typeIdx])">
-                      <a href="#!" style="font-size: 14px;"> {{ leastIndex[typeIdx] + index + 1 }} </a>
-                  </li>
-                  
-                  <li v-if="mostIndex[typeIdx] != parseInt((collection.length + indexPerPage - 1)/ indexPerPage)">...</li>
-                  <li class="waves-effect" v-on:click="passIndex(typeIdx, currentIndex[typeIdx] + 1)"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
-                </ul>                
+              <ul class="pagination result-pagination">
+                <li class="waves-effect" v-on:click="passIndex(typeIdx, currentIndex[typeIdx] - 1)"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+                <li v-if="leastIndex[typeIdx] != 0">...</li>
+
+                <li v-for="(n, index) in (mostIndex[typeIdx] - leastIndex[typeIdx])"
+                    class="waves-effect"
+                    v-bind:class="{ active: (index + leastIndex[typeIdx]) === currentIndex[typeIdx] }"
+                    v-on:click="passIndex(typeIdx, index + leastIndex[typeIdx])">
+                    <a href="#!" style="font-size: 14px;"> {{ leastIndex[typeIdx] + index + 1 }} </a>
+                </li>
+
+                <li v-if="mostIndex[typeIdx] != parseInt((collection.length + indexPerPage - 1)/ indexPerPage)">...</li>
+                <li class="waves-effect" v-on:click="passIndex(typeIdx, currentIndex[typeIdx] + 1)"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
               </ul>
 
-              <div v-if="collection.length !== 0" v-for="(n, index) in indexPerPage" class="col s12 m2">
-                <div class="card" v-if="(indexPerPage * currentIndex[typeIdx] + index) < collections[typeIdx].length" :key="indexPerPage * currentIndex[typeIdx] + index">
-                  <div class="card-image waves-effect waves-block waves-light">                    
+              <div v-if="collection.length !== 0" class="results-grid">
+                <div
+                    v-for="(n, index) in indexPerPage"
+                    v-if="(indexPerPage * currentIndex[typeIdx] + index) < collections[typeIdx].length"
+                    :key="indexPerPage * currentIndex[typeIdx] + index"
+                    class="result-card-cell">
+                  <div class="card">
+                    <div class="card-image waves-effect waves-block waves-light">
                       <a class="deep-orange darken-1 btn-floating btn-small waves-effect waves-light" style=" margin-top: 10px;  margin-right: -26px; position: absolute; right: 40px;" v-on:click="memo(typeIdx, (indexPerPage * currentIndex[typeIdx] + index))">
                         <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">add_shopping_cart</i>
                       </a>
-                    <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" height="360">
-                    
-                  </div>
-                  <div class="card-content">
-                    <div 
-                        class="card-title activator grey-text text-darken-4" 
-                        style="font-size: 20px; text-overflow: ellipsis; height: 60px; text-align: center; overflow: hidden;" 
-                        v-bind:style="getFontSize(collection[(indexPerPage * currentIndex[typeIdx] + index)].title)">
+                      <img class="activator" v-bind:src="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb">
+                    </div>
+                    <div class="card-content">
+                      <div
+                          class="card-title result-card-title activator grey-text text-darken-4"
+                          style="font-size: 20px;"
+                          v-bind:style="getFontSize(collection[(indexPerPage * currentIndex[typeIdx] + index)].title)">
                         <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex[typeIdx] + index)].href" rel="noopener">
                           {{ collection[(indexPerPage * currentIndex[typeIdx] + index)].title }}
                         </a>
+                      </div>
                     </div>					  
-                  </div>
-                  <div class="card-reveal">
-                    <div class="card-title grey-text text-darken-4" style="font-size: 16px; font-weight: bold; text-overflow: ellipsis; overflow: hidden;">
-                      {{ collection[(indexPerPage * currentIndex[typeIdx] + index)].title }}
-                    </div>
-                    <div style="width: 80%; word-wrap: break-word;">
+                    <div class="card-reveal">
+                      <div class="card-title grey-text text-darken-4" style="font-size: 16px; font-weight: bold; text-overflow: ellipsis; overflow: hidden;">
+                        {{ collection[(indexPerPage * currentIndex[typeIdx] + index)].title }}
+                      </div>
+                      <div class="result-card-url">
                         <br>
                         <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex[typeIdx] + index)].href" rel="noopener">
                           {{ collection[(indexPerPage * currentIndex[typeIdx] + index) ].href }}
@@ -306,9 +401,10 @@
                         <a target="_blank" v-bind:href="collection[(indexPerPage * currentIndex[typeIdx] + index)].thumb" rel="noopener">
                         {{ collection[(indexPerPage * currentIndex[typeIdx] + index) ].thumb }}
                         </a>
+                      </div>
                     </div>
-                  </div>      
-                </div>	
+                  </div>
+                </div>
               </div>
               
             </div>
@@ -324,6 +420,10 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/clipboard.js/1.5.3/clipboard.min.js"></script>
     <script type="text/javascript">
+
+      function escapeHTML(value) {
+        return $('<div>').text(String(value)).html()
+      }
 
       $(document).ready(function(){        
         $('#DelayHolder').css('display', '')
@@ -400,6 +500,7 @@
             paginationPerPage: 15,
             paginationStride: 5,
             copyList: [],
+            isDownloading: false,
             taskList: [],
             taskIndex: -1
         },
@@ -444,7 +545,7 @@
             this.leastIndex[idx] = (this.mostIndex[idx]  - this.paginationPerPage) > 0 ? (this.mostIndex[idx]  - this.paginationPerPage) : 0;
           },
           memo : function(typeId, collectionId) {
-            M.toast({html: 'Add ' + this.collections[typeId][collectionId].title, displayLength: 1000})
+            M.toast({html: 'Add ' + escapeHTML(this.collections[typeId][collectionId].title), displayLength: 1000})
             this.copyList.push(this.collections[typeId][collectionId])
             if (this.taskIndex >= 0 && this.taskIndex < this.taskList.length) {
               this.taskList[this.taskIndex].hasDownload = true
@@ -464,6 +565,43 @@
 
             this.taskIndex = -1
           },
+          downloadCopyList: function() {
+            if (this.isDownloading || this.copyList.length === 0) {
+              if (this.copyList.length === 0) {
+                M.toast({html: 'Clipboard is empty', displayLength: 1000})
+              }
+              return
+            }
+
+            this.isDownloading = true
+            const urls = this.copyList.map(item => item.href)
+            M.toast({html: `Downloading ${urls.length} entries...`, displayLength: 30000})
+
+            fetch('/download', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({ urls: urls })
+            })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Download request failed')
+                }
+                return response.json()
+              })
+              .then(result => {
+                M.toast({html: `Downloaded ${escapeHTML(result.succeeded)}/${escapeHTML(result.submitted)} entries`, displayLength: 3000})
+              })
+              .catch(() => {
+                M.toast({html: 'Download failed', displayLength: 3000})
+              })
+              .finally(() => {
+                this.isDownloading = false
+              })
+          },
           IncrementTaskIndex: function(increment) {
             const val = increment + this.taskIndex
             this.taskIndex = (val >= this.taskList.length ? this.taskList.length - 1 : (val <= -1 ? -1 : val))
@@ -474,15 +612,15 @@
             const instance2 = M.Sidenav.getInstance($('#sidenav-2'));
             instance2.close()
 
-            M.toast({html: `Update Query to ${this.taskList[this.taskIndex].keyword}`, duration: 1000})
+            M.toast({html: `Update Query to ${escapeHTML(this.taskList[this.taskIndex].keyword)}`, duration: 1000})
 
             $('#textarea1').val(this.taskList[this.taskIndex].keyword)
             this.RunTask()
           },
           RunTask: function() {
             const param =  $('#textarea1').val()
-            const pendingInstnace = M.toast({html: 'Pending ' + param + ' ... ', displayLength: 30000})
-            $.ajax('/search?param=' + param).done(data => {
+            const pendingInstnace = M.toast({html: 'Pending ' + escapeHTML(param) + ' ... ', displayLength: 30000})
+            $.ajax('/search?param=' + encodeURIComponent(param)).done(data => {
               collectionVue.types = Object.keys(data)
               collectionVue.collections = Object.values(data)
               collectionVue.currentIndex = new Array(collectionVue.collections.length).fill(0)
