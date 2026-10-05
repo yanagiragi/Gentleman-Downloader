@@ -4,7 +4,7 @@ const pMap = require('p-map')
 const sanitize = require('sanitize-filename')
 
 const { EH, NH, Wnacg, Ahri } = require('..')
-const RequestAsync = require('../src/utils')
+const { RequestAsync } = require('../src/util')
 
 // eslint-disable-next-line no-undef
 const StoragePath = path.join(__dirname, 'Storage')

@@ -1,4 +1,13 @@
-const { RequestAsync, ParseDOM, CleanUpSearchParams, CheckMetaContainsChinese } = require('./util')
+const { RequestAsync, CleanUpSearchParams, CheckMetaContainsChinese } = require('./util')
+
+const APIBaseURL = 'https://nhentai.net/api/v2'
+const ImageBaseURL = 'https://i.nhentai.net/'
+const ThumbnailBaseURL = 'https://t.nhentai.net/'
+
+async function RequestJSON (url) {
+    const result = await RequestAsync(url)
+    return JSON.parse(result)
+}
 
 class NH
 {
@@ -13,33 +22,29 @@ class NH
         if(this.verbose) {
             console.log(`Start Run NH: ${this.title}`)
         }
-        
-        const $ = this.DOM
-        const pageCount = $('.thumb-container img').length
-        if(pageCount === 0) {
-            console.error(`Error On ${this.url}, maybe be 503 Service Temporarily Unavailable, will retry later.`)
-        }
 
-        const pics = $('.thumb-container a')
+        const pages = this.gallery.pages || []
         if(this.verbose) {
-            console.log(`Found ${pics.length} Pics On ${this.title}`)
+            console.log(`Found ${pages.length} Pics On ${this.title}`)
         }
 
-        for(let i = 0; i < pics.length; ++i){
-            const href = new URL(`https://nhentai.net${$(pics[i]).attr('href')}`)
-            const text = await RequestAsync(href.toString())
-            const new$ = ParseDOM(text)
-            const img = new$('#image-container img')
-            const src = img.attr('src')
-            const pic = { 'href': src, id: (this.pics.length + 1) }
+        for(let i = 0; i < pages.length; ++i){
+            const href = new URL(pages[i].path, ImageBaseURL).toString()
+            const pic = { href: href, id: (this.pics.length + 1) }
             this.pics.push(pic)
-            console.log(`Get ${i} pic src: ${src}`)
+            if(this.verbose) {
+                console.log(`Get ${i} pic src: ${href}`)
+            }
         }
     }
 
     async Setup() {
-        const result = await RequestAsync(this.url)
-        this.DOM = ParseDOM(result)
+        const galleryID = new URL(this.url).pathname.match(/^\/g\/(\d+)/)?.[1]
+        if(galleryID == null) {
+            throw new Error(`Invalid NH gallery URL: ${this.url}`)
+        }
+
+        this.gallery = await RequestJSON(`${APIBaseURL}/galleries/${galleryID}`)
         this.ParseName()
         this.ParseMeta()
     }
@@ -52,34 +57,26 @@ class NH
     }
 
     async ParseName() {
-        const $ = this.DOM
-        const jpTitle = $('#info h2').text()
-        const engTitle = $('#info h1').text()	
-        this.jpTitle = jpTitle
-        this.engTitle = engTitle
-        this.title = this.useJpTitle ? this.jpTitle : this.engTitle
+        this.jpTitle = this.gallery.title.japanese || ''
+        this.engTitle = this.gallery.title.english || ''
+        this.title = this.useJpTitle
+            ? (this.jpTitle || this.engTitle)
+            : (this.engTitle || this.jpTitle)
     }
 
     // only fetch one page, returns top 5 results
     static async Search(keywords, returnResults=5) {
-        const url = `https://nhentai.net/search/?q=${encodeURIComponent(keywords)}`
-        const result = await RequestAsync(url)
-        const $ = ParseDOM(result)
-        const blocks = $('.gallery')
-        
-        let candidates = []
-        
-        for(let i = 0; i < blocks.length; ++i) {
-            const name = $('.caption', blocks[i]).text()
-            const href = 'https://nhentai.net' + $('a', blocks[i]).attr('href')
-            const dataSrc =  $('.lazyload', blocks[i]).attr('data-src')
-            const src = $('img', blocks[i]).attr('src')
-            // for some result, thumbnails stores in src, else stores in data-src
-            const thumb = (dataSrc != null && !dataSrc.includes('data:image/gif')) ? dataSrc : src
-            candidates.push({title: name, href: href, thumb: thumb})
-        }
-        
-        candidates = candidates.sort((a, b) => { return (CheckMetaContainsChinese(a.title) && !CheckMetaContainsChinese(b.title)) ? -1 : 0 } ).splice(0, returnResults)
+        const url = `${APIBaseURL}/search?query=${encodeURIComponent(keywords)}&sort=date&page=1`
+        const response = await RequestJSON(url)
+        const candidates = response.result
+            .filter(gallery => gallery.blacklisted !== true)
+            .map(gallery => ({
+                title: gallery.english_title || gallery.japanese_title || '',
+                href: `https://nhentai.net/g/${gallery.id}/`,
+                thumb: new URL(gallery.thumbnail, ThumbnailBaseURL).toString()
+            }))
+            .sort((a, b) => { return (CheckMetaContainsChinese(a.title) && !CheckMetaContainsChinese(b.title)) ? -1 : 0 })
+            .slice(0, returnResults)
         
         return candidates
     }
