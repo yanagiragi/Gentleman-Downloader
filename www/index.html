@@ -219,6 +219,26 @@
         margin: 9px 0;
       }
 
+      @media only screen and (max-width: 992px) {
+        .collection-input-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto auto;
+          align-items: start;
+          gap: 8px;
+        }
+
+        .collection-keyword-field {
+          float: none !important;
+          width: auto !important;
+          min-width: 0;
+          margin-left: 0 !important;
+        }
+
+        .collection-submit-button {
+          margin: 20px 0 0 !important;
+        }
+      }
+
       @media only screen and (max-width: 600px) {
         .customPadding,
         .customPadding2 {
@@ -226,8 +246,96 @@
           padding-left: 16px;
         }
 
+        #collectionInput {
+          padding-top: 58px;
+        }
+
+        .side-nav-control {
+          top: 0 !important;
+          display: flex;
+          box-sizing: border-box;
+          width: 48px;
+          min-height: 48px;
+          align-items: center;
+          justify-content: center;
+          padding: 12px !important;
+        }
+
+        .side-nav-control > a {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .clipboard-nav-trigger {
+          left: 0 !important;
+        }
+
+        .clipboard-count {
+          left: 48px !important;
+        }
+
+        .task-count {
+          right: 144px !important;
+        }
+
+        .task-previous {
+          right: 96px !important;
+        }
+
+        .task-next {
+          right: 48px !important;
+        }
+
+        .task-nav-trigger {
+          right: 0 !important;
+        }
+
+        .sidenav {
+          width: min(300px, calc(100vw - 32px));
+        }
+
+        .sidenav li > .sidenav-action {
+          display: flex;
+          width: calc(100% - 24px);
+          margin: 6px 12px;
+          padding: 0 12px !important;
+          align-items: center;
+        }
+
+        .sidenav li > .sidenav-action > i.material-icons {
+          margin-right: 8px;
+        }
+
         .results-grid {
           grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+        }
+
+        .download-progress-modal .modal-content {
+          padding: 18px;
+        }
+
+        .download-item-header {
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .download-item-status {
+          align-self: flex-start;
+        }
+
+        .download-progress-modal .modal-footer {
+          display: flex;
+          height: auto;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+      }
+
+      @media only screen and (max-width: 300px) {
+        .clipboard-count,
+        .task-count {
+          display: none;
         }
       }
 
@@ -249,14 +357,14 @@
         </div></li>
 
         <li>
-          <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="clearCopyList">
+          <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light sidenav-action" v-on:click="clearCopyList">
             <i class="material-icons">clear</i>Clear List
           </a>
         </li>
         
         <li>
           <a href="#!" 
-            class="grey lighten-1 btn-small btn waves-effect waves-light copyBtn"
+            class="grey lighten-1 btn-small btn waves-effect waves-light copyBtn sidenav-action"
             v-bind:data-clipboard-text="copyListStr"
             onclick="M.toast({html: `Copy ${collectionVue.copyList.length} Entries`, displayLength: 1000})"
             >
@@ -266,7 +374,7 @@
 
         <li>
           <a href="#!"
-            class="grey lighten-1 btn-small btn waves-effect waves-light"
+            class="grey lighten-1 btn-small btn waves-effect waves-light sidenav-action"
             v-on:click.prevent="downloadCopyList">
             <i class="material-icons">{{ isDownloading ? 'assessment' : 'cloud_download' }}</i>
             {{ isDownloading ? 'View Progress' : 'Download List' }}
@@ -275,7 +383,7 @@
 
         <li>
           <a href="#!"
-            class="grey lighten-1 btn-small btn waves-effect waves-light"
+            class="grey lighten-1 btn-small btn waves-effect waves-light sidenav-action"
             v-bind:class="{ disabled: isDownloading }"
             v-on:click.prevent="retryFailedDownloads">
             <i class="material-icons">replay</i>Retry Failed
@@ -309,14 +417,14 @@
             </div></li>
     
             <li>
-              <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light" v-on:click="clearTaskList">
+              <a href="#!" class="grey lighten-1 btn-small waves-effect waves-light sidenav-action" v-on:click="clearTaskList">
                 <i class="material-icons">clear</i>Clear List
               </a>
             </li>
 
             <li>
                 <a href="#!" 
-                  class="grey lighten-1 btn-small btn waves-effect waves-light copyTaskBtn"
+                  class="grey lighten-1 btn-small btn waves-effect waves-light copyTaskBtn sidenav-action"
                   v-bind:data-clipboard-text="copyTaskStr"
                   onclick="M.toast({html: `Copy ${collectionVue.taskList.filter(x => !x.hasDownload).length} Entries`, displayLength: 1000})"
                   >
@@ -346,28 +454,28 @@
       </ul>
 
 
-      <div class="side-nav-control" style="padding: 18px; top: 0; left: 0;">
-        <a href="#" data-target="sidenav-1" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <div class="side-nav-control clipboard-nav-trigger" style="padding: 18px; top: 0; left: 0;">
+        <a href="#" data-target="sidenav-1" class="sidenav-trigger" aria-label="Open clipboard"><i class="material-icons">menu</i></a>
       </div>
 
-      <div class="side-nav-control" style="padding: 18px; top: 35px; left: 7px;">
+      <div class="side-nav-control clipboard-count" style="padding: 18px; top: 35px; left: 7px;">
           {{ copyList.length }}
       </div>
 
-      <div class="side-nav-control" style="padding: 18px; top: 35px; right: 7px;">
+      <div class="side-nav-control task-count" style="padding: 18px; top: 35px; right: 7px;">
           <a href="#!" v-on:click="collectionVue.IncrementTaskIndex(-collectionVue.taskIndex-1)">{{ taskIndex }}</a>
       </div>
 
-      <div class="side-nav-control" style="padding: 18px; top: 0; right: 0;">
-        <a href="#" data-target="sidenav-2" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <div class="side-nav-control task-nav-trigger" style="padding: 18px; top: 0; right: 0;">
+        <a href="#" data-target="sidenav-2" class="sidenav-trigger" aria-label="Open task list"><i class="material-icons">menu</i></a>
       </div>
 
-      <div class="side-nav-control" style="padding: 18px; top: 70px; right: 0;">
-        <a href="#" v-on:click="IncrementTaskIndex(-1)"><i class="material-icons">fast_rewind</i></a>
+      <div class="side-nav-control task-previous" style="padding: 18px; top: 70px; right: 0;">
+        <a href="#" v-on:click="IncrementTaskIndex(-1)" aria-label="Previous task"><i class="material-icons">fast_rewind</i></a>
       </div>
 
-      <div class="side-nav-control" style="padding: 18px; top: 105px; right: 0;">
-        <a href="#" v-on:click="IncrementTaskIndex(1)"><i class="material-icons">fast_forward</i></a>
+      <div class="side-nav-control task-next" style="padding: 18px; top: 105px; right: 0;">
+        <a href="#" v-on:click="IncrementTaskIndex(1)" aria-label="Next task"><i class="material-icons">fast_forward</i></a>
       </div>
 
       
@@ -376,8 +484,8 @@
           <div class="customPadding row opacTransiion" id="collectionInput">
               <h6 style="padding: 10px; padding-bottom: 5px;">Inputs</h6>
               <form class="col s12">
-                <div class="row">
-                  <div class="input-field col s11">
+                <div class="row collection-input-row">
+                  <div class="input-field col s11 collection-keyword-field">
                     <textarea id="textarea1" class="materialize-textarea" data-original-height=0 placeholder="どこ━━━━(゜∀゜三゜∀゜)━━━━!!??" ></textarea>
                     <label for="textarea1">Enter Keyword</label>
                   </div>
@@ -391,11 +499,11 @@
                     </div>
                   </div>-->
                   
-                  <a class="btn-floating btn-small waves-effect waves-light" style="margin-top: 20px; margin-left: 5px;" id="submitCollection">
+                  <a class="btn-floating btn-small waves-effect waves-light collection-submit-button" style="margin-top: 20px; margin-left: 5px;" id="submitCollection" aria-label="Search">
                     <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">send</i>
                   </a>
 
-                  <a class="btn-floating btn-small waves-effect waves-light" style="margin-top: 20px; margin-left: 5px;" id="submitTask">
+                  <a class="btn-floating btn-small waves-effect waves-light collection-submit-button" style="margin-top: 20px; margin-left: 5px;" id="submitTask" aria-label="Add task">
                     <i class="material-icons" style="margin-top: 2px; margin-left: 1px;">description</i>
                   </a>
                 </div>
