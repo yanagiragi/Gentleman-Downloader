@@ -13,6 +13,9 @@ const app = express()
 
 const PORT = process.env.PORT || 3004
 const PASSWORD = process.env.GDW_PASSWORD || 'pass'
+const AUTH_ENABLED = !['0', 'false', 'no', 'off'].includes(
+    String(process.env.GDW_AUTH_ENABLED || 'true').toLowerCase()
+)
 const TOKEN = Date.now().toString()
 const MAX_DOWNLOAD_URLS = 50
 const MAX_DOWNLOAD_JOBS = 100
@@ -191,7 +194,7 @@ app.use(function (req, res, next) {
     }
 
     const whiteList = ['/login', '/favicon.ico']
-    if (whiteList.includes(req.path) || (req.signedCookies && req.signedCookies.auth === TOKEN)) {
+    if (!AUTH_ENABLED || whiteList.includes(req.path) || (req.signedCookies && req.signedCookies.auth === TOKEN)) {
         next()
     }
     else {
@@ -205,7 +208,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/login', (req, res) => {
-    if (req.signedCookies && req.signedCookies.auth === TOKEN) {
+    if (!AUTH_ENABLED || (req.signedCookies && req.signedCookies.auth === TOKEN)) {
         res.redirect('/')
     }
     else {
@@ -215,6 +218,10 @@ app.get('/login', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
+    if (!AUTH_ENABLED) {
+        return res.redirect('/')
+    }
+
     if (req.body.password === PASSWORD) {
         const secure = req.secure || req.headers['x-forwarded-proto'] === 'https'
         res.cookie('auth', TOKEN, {
