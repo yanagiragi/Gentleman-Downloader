@@ -168,6 +168,57 @@
         overflow-wrap: anywhere;
       }
 
+      .download-progress-modal {
+        width: min(92%, 760px);
+        max-height: 85%;
+      }
+
+      .download-summary {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px 20px;
+        margin-bottom: 8px;
+      }
+
+      .download-item {
+        padding: 14px 0 10px;
+        border-top: 1px solid #eeeeee;
+      }
+
+      .download-item:first-child {
+        border-top: 0;
+      }
+
+      .download-item-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .download-item-title {
+        min-width: 0;
+        color: #424242;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+      }
+
+      .download-item-status {
+        flex: none;
+        text-transform: capitalize;
+      }
+
+      .download-item-detail {
+        margin-top: 5px;
+        color: #757575;
+        font-size: 0.9rem;
+      }
+
+      .download-item .progress,
+      .download-progress-modal > .modal-content > .progress {
+        margin: 9px 0;
+      }
+
       @media only screen and (max-width: 600px) {
         .customPadding,
         .customPadding2 {
@@ -216,9 +267,18 @@
         <li>
           <a href="#!"
             class="grey lighten-1 btn-small btn waves-effect waves-light"
-            v-bind:class="{ disabled: isDownloading }"
             v-on:click.prevent="downloadCopyList">
-            <i class="material-icons">cloud_download</i>Download List
+            <i class="material-icons">{{ isDownloading ? 'assessment' : 'cloud_download' }}</i>
+            {{ isDownloading ? 'View Progress' : 'Download List' }}
+          </a>
+        </li>
+
+        <li>
+          <a href="#!"
+            class="grey lighten-1 btn-small btn waves-effect waves-light"
+            v-bind:class="{ disabled: isDownloading }"
+            v-on:click.prevent="retryFailedDownloads">
+            <i class="material-icons">replay</i>Retry Failed
           </a>
         </li>
        
@@ -411,6 +471,69 @@
         </div>
       </div>
 
+      <div id="download-progress-modal" class="modal download-progress-modal">
+        <div class="modal-content">
+          <h5>{{ downloadJob && downloadJob.kind === 'retry' ? 'Retry Progress' : 'Download Progress' }}</h5>
+
+          <div v-if="downloadJob">
+            <div class="download-summary">
+              <span>{{ downloadStatusLabel(downloadJob) }}</span>
+              <span>
+                {{ downloadJob.succeeded || 0 }} succeeded ·
+                {{ downloadJob.failed || 0 }} failed ·
+                {{ downloadJob.submitted || 0 }} total
+              </span>
+            </div>
+
+            <div class="progress">
+              <div class="determinate" v-bind:style="{ width: downloadOverallPercent + '%' }"></div>
+            </div>
+
+            <div class="download-items">
+              <div class="download-item" v-for="(item, index) in downloadJob.items" v-bind:key="item.url + index">
+                <div class="download-item-header">
+                  <div class="download-item-title">{{ item.title || item.url }}</div>
+                  <div class="download-item-status">{{ downloadStatusLabel(item) }}</div>
+                </div>
+
+                <div class="download-item-detail" v-if="item.total > 0">
+                  {{ item.completed || 0 }}/{{ item.total }} files
+                  <span v-if="item.failed > 0"> · {{ item.failed }} failed</span>
+                </div>
+                <div class="download-item-detail" v-else>{{ item.url }}</div>
+                <div class="download-item-detail" v-if="item.currentGallery">
+                  <strong>{{ item.currentGallery }}</strong>
+                  <span v-if="item.currentPage === 'archive'"> · Archive</span>
+                  <span v-else-if="item.currentPage"> · Page {{ item.currentPage }}</span>
+                </div>
+
+                <div class="progress" v-if="item.total > 0">
+                  <div class="determinate" v-bind:style="{ width: downloadItemPercent(item) + '%' }"></div>
+                </div>
+                <div class="progress" v-else-if="isDownloadItemActive(item)">
+                  <div class="indeterminate"></div>
+                </div>
+
+                <div class="red-text text-darken-2" v-if="item.error">{{ item.error }}</div>
+              </div>
+            </div>
+
+            <div class="red-text text-darken-2" v-if="downloadJob.error">{{ downloadJob.error }}</div>
+          </div>
+
+          <div v-else>Preparing download job...</div>
+        </div>
+        <div class="modal-footer">
+          <a href="#!"
+            class="waves-effect btn-flat red-text text-darken-2"
+            v-if="canRetryDownloads"
+            v-on:click.prevent="retryFailedDownloads">
+            Retry Failed
+          </a>
+          <a href="#!" class="modal-close waves-effect btn-flat">Hide</a>
+        </div>
+      </div>
+
     </div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -430,6 +553,7 @@
 
         $('#sidenav-1').sidenav({edge: 'left'});
         $('#sidenav-2').sidenav({edge: 'right'});
+        $('.modal').modal();
 
         // Disable Hiddle Blocks
         $('#generateInputHidden').css('display', 'none');
@@ -501,6 +625,9 @@
             paginationStride: 5,
             copyList: [],
             isDownloading: false,
+            downloadJob: null,
+            downloadPollTimer: null,
+            downloadPollFailures: 0,
             taskList: [],
             taskIndex: -1
         },
@@ -519,6 +646,16 @@
               str += `${iterator.keyword}\n\n`
             }
             return str
+          },
+          downloadOverallPercent: function() {
+            if (!this.downloadJob || !Array.isArray(this.downloadJob.items) || this.downloadJob.items.length === 0) {
+              return 0
+            }
+            const completed = this.downloadJob.items.filter(item => item.status === 'completed' || item.status === 'failed').length
+            return Math.round((completed / this.downloadJob.items.length) * 100)
+          },
+          canRetryDownloads: function() {
+            return !this.isDownloading && this.downloadJob != null && this.downloadJob.failed > 0
           }
         },
         methods:
@@ -565,17 +702,111 @@
 
             this.taskIndex = -1
           },
+          openDownloadModal: function() {
+            const modal = M.Modal.getInstance(document.getElementById('download-progress-modal'))
+            if (modal) {
+              modal.open()
+            }
+          },
+          downloadStatusLabel: function(item) {
+            const labels = {
+              creating: 'Creating job',
+              queued: 'Queued',
+              running: 'Downloading',
+              preparing: 'Loading gallery',
+              locating: 'Finding images',
+              refreshing: 'Refreshing image links',
+              downloading: 'Downloading',
+              retrying: 'Retrying',
+              archiving: 'Creating ZIP',
+              completed: 'Completed',
+              failed: 'Failed',
+              disconnected: 'Connection lost'
+            }
+            return labels[item.status] || item.status || 'Waiting'
+          },
+          isDownloadItemActive: function(item) {
+            return item.status !== 'completed' && item.status !== 'failed'
+          },
+          downloadItemPercent: function(item) {
+            if (!item.total) {
+              return 0
+            }
+            return Math.min(100, Math.round(((item.completed || 0) / item.total) * 100))
+          },
+          scheduleDownloadPoll: function(delay=750) {
+            clearTimeout(this.downloadPollTimer)
+            this.downloadPollTimer = setTimeout(() => this.pollDownloadJob(), delay)
+          },
+          pollDownloadJob: function() {
+            if (!this.downloadJob || !this.downloadJob.id) {
+              return
+            }
+
+            fetch('/download/' + encodeURIComponent(this.downloadJob.id), {
+              credentials: 'same-origin',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Unable to read download progress')
+                }
+                return response.json()
+              })
+              .then(job => {
+                this.downloadJob = job
+                this.downloadPollFailures = 0
+
+                if (job.status === 'running') {
+                  this.scheduleDownloadPoll()
+                  return
+                }
+
+                this.isDownloading = false
+                if (job.status === 'completed') {
+                  const action = job.kind === 'retry' ? 'Retried' : 'Downloaded'
+                  M.toast({
+                    html: `${action} ${escapeHTML(job.succeeded)}/${escapeHTML(job.submitted)} entries`,
+                    displayLength: 3000
+                  })
+                }
+                else {
+                  M.toast({html: 'Download job failed', displayLength: 3000})
+                }
+              })
+              .catch(() => {
+                this.downloadPollFailures += 1
+                if (this.downloadPollFailures <= 5) {
+                  this.scheduleDownloadPoll(1500)
+                  return
+                }
+
+                this.isDownloading = false
+                this.downloadJob.status = 'disconnected'
+                this.downloadJob.error = 'Unable to read download progress. The server may still be downloading.'
+                M.toast({html: 'Download progress connection lost', displayLength: 3000})
+              })
+          },
           downloadCopyList: function() {
-            if (this.isDownloading || this.copyList.length === 0) {
-              if (this.copyList.length === 0) {
-                M.toast({html: 'Clipboard is empty', displayLength: 1000})
-              }
+            if (this.isDownloading) {
+              this.openDownloadModal()
+              return
+            }
+            if (this.copyList.length === 0) {
+              M.toast({html: 'Clipboard is empty', displayLength: 1000})
               return
             }
 
             this.isDownloading = true
             const urls = this.copyList.map(item => item.href)
-            M.toast({html: `Downloading ${urls.length} entries...`, displayLength: 30000})
+            this.downloadJob = {
+              status: 'creating',
+              submitted: urls.length,
+              succeeded: 0,
+              failed: 0,
+              items: urls.map(url => ({ url: url, status: 'queued', completed: 0, total: 0, failed: 0 }))
+            }
+            this.$nextTick(() => this.openDownloadModal())
 
             fetch('/download', {
               method: 'POST',
@@ -592,14 +823,65 @@
                 }
                 return response.json()
               })
-              .then(result => {
-                M.toast({html: `Downloaded ${escapeHTML(result.succeeded)}/${escapeHTML(result.submitted)} entries`, displayLength: 3000})
+              .then(job => {
+                this.downloadJob = job
+                this.downloadPollFailures = 0
+                this.scheduleDownloadPoll(250)
               })
-              .catch(() => {
-                M.toast({html: 'Download failed', displayLength: 3000})
-              })
-              .finally(() => {
+              .catch(err => {
                 this.isDownloading = false
+                this.downloadJob.status = 'failed'
+                this.downloadJob.error = err.message
+                M.toast({html: 'Unable to start download', displayLength: 3000})
+              })
+          },
+          retryFailedDownloads: function() {
+            if (this.isDownloading) {
+              this.openDownloadModal()
+              return
+            }
+
+            this.isDownloading = true
+            this.downloadJob = {
+              kind: 'retry',
+              status: 'creating',
+              submitted: 0,
+              succeeded: 0,
+              failed: 0,
+              items: [{
+                url: 'err.json',
+                title: 'Retry failed downloads',
+                status: 'queued',
+                completed: 0,
+                total: 0,
+                failed: 0
+              }]
+            }
+            this.$nextTick(() => this.openDownloadModal())
+
+            fetch('/download/retry', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+              .then(response => {
+                if (!response.ok) {
+                  return response.json()
+                    .catch(() => ({}))
+                    .then(body => { throw new Error(body.error || 'Retry request failed') })
+                }
+                return response.json()
+              })
+              .then(job => {
+                this.downloadJob = job
+                this.downloadPollFailures = 0
+                this.scheduleDownloadPoll(250)
+              })
+              .catch(err => {
+                this.isDownloading = false
+                this.downloadJob.status = 'failed'
+                this.downloadJob.error = err.message
+                M.toast({html: 'Unable to start retry', displayLength: 3000})
               })
           },
           IncrementTaskIndex: function(increment) {
