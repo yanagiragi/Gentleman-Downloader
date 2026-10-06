@@ -5,6 +5,7 @@ const fs = require('fs-extra')
 const sanitize = require('sanitize-filename')
 
 const { EH } = require('./eh')
+const { EX } = require('./ex')
 const { NH } = require('./nh')
 const { Wnacg } = require('./wnacg')
 const { Ahri } = require('./ahri')
@@ -153,7 +154,10 @@ function IsValidDownload (filename, data = fs.readFileSync(filename)) {
 }
 
 function CreateCrawler (url) {
-    if (url.includes('exhentai') || url.includes('e-hentai')) {
+    if (url.includes('exhentai')) {
+        return new EX(url)
+    }
+    if (url.includes('e-hentai')) {
         return new EH(url)
     }
     if (url.includes('nhentai')) {

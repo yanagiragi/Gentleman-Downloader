@@ -88,3 +88,4 @@ Storage
 www/ecosystem.config.js
 
 src/cookie.txt
+ex-cookie.json

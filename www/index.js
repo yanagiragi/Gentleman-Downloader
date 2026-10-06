@@ -2,11 +2,12 @@
 const express = require('express')
 const path = require('path')
 const crypto = require('crypto')
+const { Buffer } = require('buffer')
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
 const pMap = require('p-map')
-const { EH, NH, Wnacg, Ahri } = require('..')
+const { EH, EX, NH, Wnacg, Ahri } = require('..')
 const { DownloadGallery, RetryFailedDownloads } = require('../src/downloader')
 
 const app = express()
@@ -20,8 +21,70 @@ const TOKEN = Date.now().toString()
 const MAX_DOWNLOAD_URLS = 50
 const MAX_DOWNLOAD_JOBS = 100
 const DOWNLOAD_JOB_TTL = 1000 * 60 * 60
+const EX_THUMBNAIL_URL_TTL = 1000 * 60 * 60
+const EX_THUMBNAIL_MAX_SIZE = 5 * 1024 * 1024
+const EX_THUMBNAIL_SECRET = crypto.randomBytes(32)
 const downloadJobs = new Map()
 let activeRetryJobId = null
+
+function SignEXThumbnailURL (url, expires) {
+    return crypto.createHmac('sha256', EX_THUMBNAIL_SECRET)
+        .update(`${expires}\n${url}`)
+        .digest('hex')
+}
+
+function CreateEXThumbnailURL (remoteURL) {
+    const url = new URL(remoteURL).toString()
+    const expires = Date.now() + EX_THUMBNAIL_URL_TTL
+    const signature = SignEXThumbnailURL(url, expires)
+    return `/ex-thumbnail?url=${encodeURIComponent(url)}&expires=${expires}&signature=${signature}`
+}
+
+function ValidateEXThumbnailURL (urlValue, expiresValue, signatureValue) {
+    if (typeof urlValue !== 'string' || urlValue.length > 2048 ||
+        typeof expiresValue !== 'string' || !/^\d+$/.test(expiresValue) ||
+        typeof signatureValue !== 'string' || !/^[a-f0-9]{64}$/.test(signatureValue)) {
+        return null
+    }
+
+    const expires = Number(expiresValue)
+    if (!Number.isSafeInteger(expires) || expires < Date.now() || expires > Date.now() + EX_THUMBNAIL_URL_TTL) {
+        return null
+    }
+
+    let url
+    try {
+        url = new URL(urlValue)
+    }
+    catch (_err) {
+        return null
+    }
+    if (url.protocol !== 'https:' || url.hostname !== 's.exhentai.org' || url.port !== '' ||
+        url.username !== '' || url.password !== '' || !/\.(?:gif|jpe?g|png|webp)$/i.test(url.pathname)) {
+        return null
+    }
+
+    const expected = Buffer.from(SignEXThumbnailURL(url.toString(), expiresValue), 'hex')
+    const actual = Buffer.from(signatureValue, 'hex')
+    return crypto.timingSafeEqual(expected, actual) ? url.toString() : null
+}
+
+function DetectImageType (data) {
+    if (data.length >= 12 && data.subarray(0, 4).toString('ascii') === 'RIFF' &&
+        data.subarray(8, 12).toString('ascii') === 'WEBP') {
+        return 'image/webp'
+    }
+    if (data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) {
+        return 'image/jpeg'
+    }
+    if (data.length >= 8 && data.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+        return 'image/png'
+    }
+    if (data.length >= 6 && ['GIF87a', 'GIF89a'].includes(data.subarray(0, 6).toString('ascii'))) {
+        return 'image/gif'
+    }
+    return null
+}
 
 function CreateDownloadJob (urls, kind = 'download') {
     if (downloadJobs.size >= MAX_DOWNLOAD_JOBS) {
@@ -238,16 +301,69 @@ app.post('/login', (req, res) => {
     }
 })
 
+app.get('/ex-thumbnail', async (req, res) => {
+    const remoteURL = ValidateEXThumbnailURL(req.query.url, req.query.expires, req.query.signature)
+    if (remoteURL == null) {
+        return res.status(400).send({ error: 'Invalid thumbnail URL' })
+    }
+
+    try {
+        const image = await EX.RequestResource(remoteURL, {
+            encoding: 'binary',
+            size: EX_THUMBNAIL_MAX_SIZE
+        })
+        if (!Buffer.isBuffer(image)) {
+            throw new Error('Empty thumbnail response')
+        }
+        const contentType = DetectImageType(image)
+        if (contentType == null) {
+            throw new Error('Invalid thumbnail response')
+        }
+
+        res.set('Content-Type', contentType)
+        res.set('Cache-Control', 'private, max-age=3600')
+        res.set('X-Content-Type-Options', 'nosniff')
+        res.send(image)
+    }
+    catch (err) {
+        console.error(`Unable to fetch ExHentai thumbnail: ${err}`)
+        res.status(502).send({ error: 'Unable to fetch thumbnail' })
+    }
+})
+
 app.get('/search', async (req, res) => {
     const keyword = req.query.param
-    const slice = 20
-    const EHResults = await EH.Search(keyword, slice)
-    const NHResults = await NH.Search(keyword, slice)
-    const WnacgResults = await Wnacg.Search(keyword, slice)
-    const AhriResults = await Ahri.Search(keyword, slice)
-    const results = { EH: EHResults, NH: NHResults, Wnacg: WnacgResults, Ahri: AhriResults }
+    if (typeof keyword !== 'string' || keyword.length > 200) {
+        return res.status(400).send({ error: 'Invalid search keyword' })
+    }
 
-    res.send(results)
+    try {
+        const slice = 20
+        const useEX = EX.HasCookieFile()
+        const primaryType = useEX ? 'EX' : 'EH'
+        const primaryResults = useEX ? await EX.Search(keyword, slice) : await EH.Search(keyword, slice)
+        if (useEX) {
+            for (const result of primaryResults) {
+                result.thumb = CreateEXThumbnailURL(result.thumb)
+            }
+        }
+
+        const NHResults = await NH.Search(keyword, slice)
+        const WnacgResults = await Wnacg.Search(keyword, slice)
+        const AhriResults = await Ahri.Search(keyword, slice)
+        const results = {
+            [primaryType]: primaryResults,
+            NH: NHResults,
+            Wnacg: WnacgResults,
+            Ahri: AhriResults
+        }
+
+        res.send(results)
+    }
+    catch (err) {
+        console.error(`Search failed: ${err}`)
+        res.status(502).send({ error: 'Search failed' })
+    }
 })
 
 app.post('/download', (req, res) => {

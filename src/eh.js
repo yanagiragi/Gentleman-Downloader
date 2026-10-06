@@ -9,15 +9,19 @@ class EH
         this.pics = []
     }
 
+    async RequestPage(url) {
+        return RequestAsync(url)
+    }
+
     async Run() {
         if(this.verbose) {
-            console.log(`Start Run EH: ${this.title}, totalPageCount = ${this.totalPageCount}`)
+            console.log(`Start Run ${this.constructor.name}: ${this.title}, totalPageCount = ${this.totalPageCount}`)
         }
 
         for(let i = 0; i < this.totalPageCount; ++i) {
             const url = `${this.url}?p=${i}`
             
-            const result = await RequestAsync(url)
+            const result = await this.RequestPage(url)
             const $ = ParseDOM(result)
 
             // Older layouts wrap links in .gdtm/.gdtl. The current layout puts
@@ -40,14 +44,14 @@ class EH
     }
 
     async GetPicSrc(url) {
-        const result = await RequestAsync(url)    
+        const result = await this.RequestPage(url)
         const $ = ParseDOM(result)
         const src = $('#i3 img').attr('src')
         return src
     }
 
     async Setup() {
-        const result = await RequestAsync(this.url)
+        const result = await this.RequestPage(this.url)
         this.DOM = ParseDOM(result)
         this.ParseTotalPageCount()
         this.ParseName()

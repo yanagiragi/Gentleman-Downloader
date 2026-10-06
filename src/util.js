@@ -35,7 +35,6 @@ function GetRequestOptions (opts) {
     const options = Object.assign(defaultOptions, typeof opts === 'object' ? opts : { uri: opts })
     options.uri = (options.uri === '' || options.uri === undefined) ? options.url : options.uri
     options.uri = FormURI(options.uri)
-    options.uri = (options.uri.includes('exhentai') && cookie == '') ? options.uri.replace('exhentai', 'e-hentai') : options.uri
     return options
 }
 
